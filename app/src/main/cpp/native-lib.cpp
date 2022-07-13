@@ -106,14 +106,13 @@ void HookedPlayerPrefs_SetInt(String * key, int32_t value, MethodInfo * method){
 
   #include "inlinehook.cpp"
 
-  unsigned long func = NULL;
-    func = base + 0x3F3420;
-    hooked();
+   unsigned long func = base + 0x5ED990;
+    hooked(func);
 void* (*getListener)(void* arg1,void* arg2) = NULL;
 void* new_getListener(void* arg1,void* arg2){
 
 }
-int hooked()
+int hooked(unsigned long func)
 {
 //    LOGD("func = %x", func);
     if (registerInlineHook((uint32_t) func, (uint32_t) new_getListener, (uint32_t **) &getListener) != ELE7EN_OK) {
