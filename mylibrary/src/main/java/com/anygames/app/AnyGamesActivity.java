@@ -22,7 +22,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.anygames.sdk.Logger;
-import com.anygames.sdk.R;
 import com.anygames.sdk.Tools;
 
 
