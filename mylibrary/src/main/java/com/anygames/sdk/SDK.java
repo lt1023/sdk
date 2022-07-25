@@ -18,11 +18,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.anygames.app.GameActivity;
-import com.dualcarbon.universaltrucksimulator.R;
 import com.meta.android.mpg.cm.MetaAdApi;
 import com.meta.android.mpg.cm.api.IAdCallback;
 import com.meta.android.mpg.cm.api.InitCallback;
-import com.unity3d.player.UnityPlayer;
+import com.zombie.hunter.shooting.games.fps.dead.trigger.target.R;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -33,7 +32,6 @@ import java.lang.reflect.Proxy;
 
 public class SDK {
     public static Controller mHandler = new Controller();
-    public static native void onRewarded(int type);
     public static void initSDK(Application application) {
         MetaAdApi.get().init(application, "1666430565", new InitCallback() {
             @Override
@@ -56,6 +54,29 @@ public class SDK {
         void OnSuccess();
     }
 
+    private static void showRewardedAd() {
+        showRewardedVideo(new AdsCallBack() {
+            @Override
+            public void onAdsStarted() {
+
+            }
+
+            @Override
+            public void onAdsRewarded() {
+
+            }
+
+            @Override
+            public void onAdsClosed() {
+
+            }
+
+            @Override
+            public void onAdsFailed() {
+
+            }
+        });
+    }
     private static void showRewardedAd(IOnShowResult result) {
         isEarned = false;
         showRewardedVideo(new AdsCallBack() {
@@ -122,7 +143,7 @@ public class SDK {
         view.findViewById(R.id.show).setOnClickListener(v -> {
             dialog.dismiss();
             if (times == 1){
-                onRewarded(type);
+//                onRewarded(type);
             }
             showRewardedAd(() -> {
                 times -= 1;

@@ -1,3 +1,4 @@
+include ':inlinhook'
 include ':mylibrary2'
 include ':mylibrary'
 include ':app'
