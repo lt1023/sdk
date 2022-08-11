@@ -82,10 +82,25 @@ void *arg2;
 const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(arg2));
 
 
+
+void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, MethodInfo * method){
+    GameObject* gameobject = eventData->m_PointerPress;
+    if (gameobject != nullptr){
+        String * name = Object_1_get_name(reinterpret_cast<Object_1 *>(gameobject), nullptr);
+        if (name != nullptr){
+            const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
+            LOGE("click %s", s);
+        }
+    }
+    Button_OnPointerClick( __this,  eventData,  method);
+}
+
+
+
 /**
  *
  *
-
+    GameObject_SetActive(gameObject, false, nullptr);
 
 fakeCpp((void *) PlayerPrefs_SetInt,
             (void *) HookedPlayerPrefs_SetInt,
@@ -101,39 +116,23 @@ void HookedPlayerPrefs_SetInt(String * key, int32_t value, MethodInfo * method){
  * */
 
 
-/**
- *
-
-  #include "inlinehook.cpp"
-
-   unsigned long func = base + 0x5ED990;
-    hooked(func);
-void* (*getListener)(void* arg1,void* arg2) = NULL;
-void* new_getListener(void* arg1,void* arg2){
-
-}
-int hooked(unsigned long func)
-{
-//    LOGD("func = %x", func);
-    if (registerInlineHook((uint32_t) func, (uint32_t) new_getListener, (uint32_t **) &getListener) != ELE7EN_OK) {
-        return -1;
-    }
-    if (inlineHook((uint32_t) func) != ELE7EN_OK) {
-        return -1;
-    }
-//    LOGD("hookCalcFunc-------");
-    return 0;
-}
-
-
- *
- * */
-
-
 
 /**
  *
  *
+ *
+ *
+ *
+
+
+void showRewardedAd(){
+    JNIEnv* env;
+    global_jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4);
+    jclass SDK = env->FindClass("com/anygames/sdk/SDK");
+    jmethodID showRewardedAd = env->GetStaticMethodID(SDK,"showRewardedAd", "()V");
+    env->CallStaticVoidMethod(SDK, showRewardedAd);
+}
+
 void showFullVideo(){
     JNIEnv* env;
     global_jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4);

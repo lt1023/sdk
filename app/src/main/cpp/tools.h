@@ -2,6 +2,7 @@
 // Created by AA on 2022/7/15.
 //
 #include "il2cpp-types.h"
+#include "inlinehook.cpp"
 
 void showRewardedAd(){
     LOGE("showRewardedAd");

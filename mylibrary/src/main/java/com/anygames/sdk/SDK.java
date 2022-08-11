@@ -21,7 +21,6 @@ import com.anygames.app.GameActivity;
 import com.meta.android.mpg.cm.MetaAdApi;
 import com.meta.android.mpg.cm.api.IAdCallback;
 import com.meta.android.mpg.cm.api.InitCallback;
-import com.zombie.hunter.shooting.games.fps.dead.trigger.target.R;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -33,7 +32,7 @@ import java.lang.reflect.Proxy;
 public class SDK {
     public static Controller mHandler = new Controller();
     public static void initSDK(Application application) {
-        MetaAdApi.get().init(application, "1666430565", new InitCallback() {
+        MetaAdApi.get().init(application, "", new InitCallback() {
             @Override
             public void onInitSuccess() {
                 Logger.log("onInitSuccess");
@@ -108,67 +107,67 @@ public class SDK {
     private static AlertDialog dialog = null;
     private static int times;
     private static String rewardDesc = "";
-    public static void showTips(int type) {
-        Activity activity = GameActivity.getActivity();
-        SharedPreferences config = activity.getSharedPreferences("config", Context.MODE_PRIVATE);
-        String key = "type_" + type;
-        if (type == 0) {
-            times = config.getInt(key, 1);
-            rewardDesc = "50000现金";
-        } else if (type == 1) {
-            times = config.getInt(key, 2);
-            rewardDesc = "100000现金";
-        } else if (type == 2) {
-            times = config.getInt(key, 3);
-            rewardDesc = "250000现金";
-        } else if (type == 3) {
-            times = config.getInt(key, 4);
-            rewardDesc = "500000现金";
-        } else if (type == 4) {
-            times = config.getInt(key, 5);
-            rewardDesc = "1000000现金";
-        } else if (type == 5) {
-            times = config.getInt(key, 1);
-            rewardDesc = "一个车库";
-        }
-        String desc = String.format("再观看%d次广告可以获得%s", times,rewardDesc);
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        View view = LayoutInflater.from(activity).inflate(R.layout.tips_dialog, null);
-        builder.setView(view);
-        dialog = builder.create();
-        dialog.show();
-        TextView tv_desc = (TextView) view.findViewById(R.id.desc);
-        tv_desc.setText(desc);
-        view.findViewById(R.id.dismiss).setOnClickListener(v -> dialog.dismiss());
-        view.findViewById(R.id.show).setOnClickListener(v -> {
-            dialog.dismiss();
-            if (times == 1){
-//                onRewarded(type);
-            }
-            showRewardedAd(() -> {
-                times -= 1;
-                if (times == 0){
-                    if (type != 5){
-                        if (type == 0) {
-                            config.edit().putInt(key, 1).apply();
-                        } else if (type == 1) {
-                            config.edit().putInt(key, 2).apply();
-                        } else if (type == 2) {
-                            config.edit().putInt(key, 3).apply();
-                        } else if (type == 3) {
-                            config.edit().putInt(key, 4).apply();
-                        } else if (type == 4) {
-                            config.edit().putInt(key, 5).apply();
-                        }
-                    }
-                    activity.runOnUiThread(() -> Toast.makeText(activity, "恭喜您获得" + rewardDesc, Toast.LENGTH_LONG).show());
-                }else {
-                    config.edit().putInt(key, times).apply();
-                }
-            });
-
-        });
-    }
+//    public static void showTips(int type) {
+//        Activity activity = GameActivity.getActivity();
+//        SharedPreferences config = activity.getSharedPreferences("config", Context.MODE_PRIVATE);
+//        String key = "type_" + type;
+//        if (type == 0) {
+//            times = config.getInt(key, 1);
+//            rewardDesc = "50000现金";
+//        } else if (type == 1) {
+//            times = config.getInt(key, 2);
+//            rewardDesc = "100000现金";
+//        } else if (type == 2) {
+//            times = config.getInt(key, 3);
+//            rewardDesc = "250000现金";
+//        } else if (type == 3) {
+//            times = config.getInt(key, 4);
+//            rewardDesc = "500000现金";
+//        } else if (type == 4) {
+//            times = config.getInt(key, 5);
+//            rewardDesc = "1000000现金";
+//        } else if (type == 5) {
+//            times = config.getInt(key, 1);
+//            rewardDesc = "一个车库";
+//        }
+//        String desc = String.format("再观看%d次广告可以获得%s", times,rewardDesc);
+//        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+//        View view = LayoutInflater.from(activity).inflate(R.layout.tips_dialog, null);
+//        builder.setView(view);
+//        dialog = builder.create();
+//        dialog.show();
+//        TextView tv_desc = (TextView) view.findViewById(R.id.desc);
+//        tv_desc.setText(desc);
+//        view.findViewById(R.id.dismiss).setOnClickListener(v -> dialog.dismiss());
+//        view.findViewById(R.id.show).setOnClickListener(v -> {
+//            dialog.dismiss();
+//            if (times == 1){
+////                onRewarded(type);
+//            }
+//            showRewardedAd(() -> {
+//                times -= 1;
+//                if (times == 0){
+//                    if (type != 5){
+//                        if (type == 0) {
+//                            config.edit().putInt(key, 1).apply();
+//                        } else if (type == 1) {
+//                            config.edit().putInt(key, 2).apply();
+//                        } else if (type == 2) {
+//                            config.edit().putInt(key, 3).apply();
+//                        } else if (type == 3) {
+//                            config.edit().putInt(key, 4).apply();
+//                        } else if (type == 4) {
+//                            config.edit().putInt(key, 5).apply();
+//                        }
+//                    }
+//                    activity.runOnUiThread(() -> Toast.makeText(activity, "恭喜您获得" + rewardDesc, Toast.LENGTH_LONG).show());
+//                }else {
+//                    config.edit().putInt(key, times).apply();
+//                }
+//            });
+//
+//        });
+//    }
 
 
     public static boolean isInited() {

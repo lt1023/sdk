@@ -11,7 +11,7 @@ public class GameActivity extends com.unity3d.player.UnityPlayerActivity {
     }
 
     @Override
-    protected void onCreate(Bundle bundle) {
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         mActivity = this;
     }
