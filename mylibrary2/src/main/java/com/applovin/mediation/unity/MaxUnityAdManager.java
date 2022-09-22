@@ -457,8 +457,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
         if (!str.isEmpty())return;
 
-        OnRewardedAdFailedToDisplayEvent(str);
-        
+
         SDK.showRewardedVideo(new AdsCallBack() {
             @Override
             public void onAdsStarted() {

@@ -72,14 +72,14 @@ std::string utf16le_to_utf8(const std::u16string &u16str) {
 }
 
 
-const char *coverIl2cppString2Char(Il2CppString *str) {
+const char *coverIl2cppString2Char(void *str) {
     auto *monoString = reinterpret_cast<MonoString *>(str);
     u16string ss((char16_t *) monoString->getChars(), 0, monoString->getLength());
     const char *s = utf16le_to_utf8(ss).c_str();
     return s;
 }
 void *arg2;
-const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(arg2));
+const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(arg2));
 
 
 
@@ -144,6 +144,7 @@ void showFullVideo(){
 
 
 
+void HookedApplication_OpenURL(){}
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -164,9 +165,10 @@ Java_com_anygames_app_SDKWrapper_init(JNIEnv *env, jclass clazz, jobject applica
 //            (void *) HookedButton_OnPointerClick,
 //            reinterpret_cast<void **>(&Button_OnPointerClick));
 
-//    fakeCpp((void *) EndGameAbility_NextLevel,
-//            (void *) HookedEndGameAbility_NextLevel,
-//            reinterpret_cast<void **>(&EndGameAbility_NextLevel));
+
+    fakeCpp((void *) Application_OpenURL,
+            (void *) HookedApplication_OpenURL,
+            reinterpret_cast<void **>(&Application_OpenURL));
 }
 
 

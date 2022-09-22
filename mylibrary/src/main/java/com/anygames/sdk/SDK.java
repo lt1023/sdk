@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
@@ -170,6 +171,17 @@ public class SDK {
 //    }
 
 
+//    Class UnityPlayerClz  = UnityPlayer.class;
+//                    try {
+//        Field mMainThread = UnityPlayerClz.getDeclaredField("m_MainThread");
+//        mMainThread.setAccessible(true);
+//        Class MainThread = mMainThread.getType();
+//        Method method = MainThread.getDeclaredMethod("d", Runnable.class);
+//        method.invoke(GameActivity.mThread, (Runnable) SDK::increase);
+//    } catch (NoSuchFieldException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+//
+//    }
+
     public static boolean isInited() {
         Activity activity = null;
         SharedPreferences config = activity.getSharedPreferences("config", Context.MODE_PRIVATE);
@@ -305,27 +317,7 @@ public class SDK {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            showRewardedVideo(new AdsCallBack() {
-                @Override
-                public void onAdsStarted() {
-
-                }
-
-                @Override
-                public void onAdsRewarded() {
-
-                }
-
-                @Override
-                public void onAdsClosed() {
-
-                }
-
-                @Override
-                public void onAdsFailed() {
-
-                }
-            });
+            showFullScreenVideo();
             sendShowMessage();
         }
     }
