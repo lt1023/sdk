@@ -207,7 +207,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         JsonUtils.putString(jSONObject, "name", "OnSdkInitializedEvent");
         JsonUtils.putString(jSONObject, "consentDialogState", "2");
         JsonUtils.putString(jSONObject, "countryCode", "CN");
-        JsonUtils.putString(jSONObject, "isSuccessfullyInitialized", String.valueOf(MaxUnityAdManager.this.sdk.isInitialized()));
+        JsonUtils.putString(jSONObject, "isSuccessfullyInitialized", "true");
         MaxUnityAdManager.forwardUnityEvent(jSONObject);
         return this.sdk;
     }

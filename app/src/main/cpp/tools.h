@@ -91,7 +91,7 @@ void HookedOnPointerClick(void *arg1, void *arg2) {
     if (gameobject != nullptr) {
         void *name = object_get_name(gameobject);
         if (name != nullptr) {
-            const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
+            const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(name));
 //            LOGE("click %s", s);
             if (strcmp(s, "NextLevel") == 0) {
                 nextLevelClickTimes++;
@@ -149,3 +149,62 @@ object_get_name = reinterpret_cast<void *(*)(void *)>(add_object_get_name);
 
 add_PlayRewardVideo = base + 0x349B4C;
 hooked(add_OnPointerClick);
+
+
+
+
+
+void (*Text_set_text)(void*obj, void* value) = nullptr;
+void (*Text_OnEnable)(void*obj) = nullptr;
+void* (*Text_get_text)(void*obj) = nullptr;
+void* (*il2cpp_string_new)(const char*str) = nullptr;
+
+void praseText(void*obj, void* value){
+    const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(value));
+    LOGE("Text_set_text %s", s);
+    if (s != nullptr){
+        if (strcmp(s, "Back") == 0){
+            value = il2cpp_string_new("返回");
+        }
+    }
+    Text_set_text(obj, value);
+}
+
+void HookedText_OnEnable(void*obj, void* value){
+    Text_OnEnable(obj);
+    praseText(obj, Text_get_text(obj));
+}
+
+
+void HookedText_set_text(void*obj, void* value){
+    praseText(obj,value );
+}
+
+long add_il2cpp_string_new = base + 0x74C22C;
+il2cpp_string_new = reinterpret_cast<void *(*)(const char *)>(add_il2cpp_string_new);
+
+long add_Text_get_text = base + 0x2D33EE8;
+Text_get_text = reinterpret_cast<void *(*)(void *)>(add_Text_get_text);
+
+long add_Text_set_text = base + 0x2D33EF0;
+Text_set_text = reinterpret_cast<void (*)(void *, void *)>(add_Text_set_text);
+fakeCpp((void *) add_Text_set_text, (void *)HookedText_set_text ,reinterpret_cast<void **>(&Text_set_text));
+
+long add_Text_OnEnable = base + 0x2D347B8;
+Text_OnEnable = reinterpret_cast<void (*)(void *)>(add_Text_OnEnable);
+fakeCpp((void *) add_Text_OnEnable, (void *)HookedText_OnEnable ,reinterpret_cast<void **>(&Text_OnEnable));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

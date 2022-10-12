@@ -90,6 +90,9 @@ void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, 
         if (name != nullptr){
             const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
             LOGE("click %s", s);
+            if (strcmp(s, "PurchaseButton") == 0){
+                showRewardedAd();
+            }
         }
     }
     Button_OnPointerClick( __this,  eventData,  method);
@@ -155,9 +158,9 @@ Java_com_anygames_app_SDKWrapper_init(JNIEnv *env, jclass clazz, jobject applica
 
 
 
-//    long base = baseImageAddr("libil2cpp.so");
+    long base = baseImageAddr("libil2cpp.so");
 //    LOGE("baseImageAddr : %ld",base);
-//    init_il2cpp(base);
+    init_il2cpp(base);
 
      //fakeCpp((void *) Behaviour_get_isActiveAndEnabled, (void *)HookedBehaviour_get_isActiveAndEnabled ,reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
 

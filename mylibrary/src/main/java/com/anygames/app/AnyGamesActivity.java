@@ -25,19 +25,19 @@ import com.anygames.sdk.Logger;
 import com.anygames.sdk.Tools;
 
 
-public class AnyGamesActivity extends Activity implements JniBridge {
-    static final int HANDLER_MSG_CALLJAVA = 1000;
+public class AnyGamesActivity extends Activity{
+//    static final int HANDLER_MSG_CALLJAVA = 1000;
     private Class mTargetClass;
     private SharedPreferences mSharedPreferences;
     final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case HANDLER_MSG_CALLJAVA:
-                    String cmsg = (String) msg.obj;
-                    callJava(cmsg);
-                    break;
-            }
+//            switch (msg.what) {
+//                case HANDLER_MSG_CALLJAVA:
+//                    String cmsg = (String) msg.obj;
+//                    callJava(cmsg);
+//                    break;
+//            }
             super.handleMessage(msg);
         }
     };
@@ -147,15 +147,15 @@ public class AnyGamesActivity extends Activity implements JniBridge {
 //        return ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
 //    }
 
-    @Override
-    public void onJniCall(String msg) {
-        Message message = new Message();
-        message.what =HANDLER_MSG_CALLJAVA;
-        message.obj = msg;
-        mHandler.sendMessage(message);
-    }
-
-    private void callJava(String msg){
-        Logger.log(msg);
-    }
+//    @Override
+//    public void onJniCall(String msg) {
+//        Message message = new Message();
+//        message.what =HANDLER_MSG_CALLJAVA;
+//        message.obj = msg;
+//        mHandler.sendMessage(message);
+//    }
+//
+//    private void callJava(String msg){
+//        Logger.log(msg);
+//    }
 }
