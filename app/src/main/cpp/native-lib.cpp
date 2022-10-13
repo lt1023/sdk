@@ -116,6 +116,30 @@ void HookedPlayerPrefs_SetInt(String * key, int32_t value, MethodInfo * method){
 
 
 
+static int mLoopPullUpTimes;
+int getLoopPullUpTimes(){
+    JNIEnv* env;
+    global_jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4);
+    jclass SDK = env->FindClass("com/anygames/sdk/SDK");
+    jmethodID showFullScreenVideo = env->GetStaticMethodID(SDK,"getLoopPullUpTimes", "()I");
+    return env->CallStaticIntMethod(SDK, showFullScreenVideo);
+}
+
+ static  int adTimes = 0;
+
+void checkAdTimes(){
+    mLoopPullUpTimes = getLoopPullUpTimes();
+//    LOGE("mLoopPullUpTimes = %d",mLoopPullUpTimes);
+    if (mLoopPullUpTimes == 0)return;
+    adTimes++;
+    if (adTimes % mLoopPullUpTimes == 0){
+//        LOGE("checkAdTimesshowFullVideo");
+        showFullVideo();
+    }
+}
+
+
+
  * */
 
 

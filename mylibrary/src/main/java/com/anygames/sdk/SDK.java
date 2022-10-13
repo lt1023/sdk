@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +23,8 @@ import com.meta.android.mpg.cm.MetaAdApi;
 import com.meta.android.mpg.cm.api.IAdCallback;
 import com.meta.android.mpg.cm.api.InitCallback;
 
+import org.json.JSONObject;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.lang.reflect.Field;
@@ -31,13 +34,65 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 public class SDK {
+    private static int mTimerAdDelay = 3 * 60 * 1000;//定时广告间隔时间，单位：s
+    private static int mloopPullUpTimes = 0;//通关或者失败次数广告控制
+    private static int TIME_AD_TYPE = 1;//定时广告间隔时间，单位：s
+    private static TimerAdType mTimerAdType;
+    private enum TimerAdType{//定时广告类型
+        REWARDED,
+        FULLSCREEN,
+        INTER
+    }
+
     public static Controller mHandler = new Controller();
+
     public static void initSDK(Application application) {
+        new Thread(() -> {
+            String result = Tools.request("100021");
+//            Log.e("anygames", "result = " + result);
+            if (TextUtils.isEmpty(result)) return;
+            try {
+                JSONObject json = new JSONObject(result);
+                int code = json.optInt("code");
+                if (code == 200) {
+                    JSONObject data = json.optJSONObject("data");
+                    assert data != null;
+                    JSONObject config = data.optJSONObject("1");
+                    if (config == null){
+                        config = data.optJSONObject("2");
+                        if (config == null){
+                            config = data.optJSONObject("4");
+                            if (config != null){
+                                mTimerAdType = TimerAdType.INTER;
+                            }
+                        }else {
+                            mTimerAdType = TimerAdType.FULLSCREEN;
+                        }
+                    }else {
+                        mTimerAdType = TimerAdType.REWARDED;
+                    }
+                    assert config != null;
+                    mTimerAdDelay = config.optInt("showAdDelaySec");
+                    mloopPullUpTimes = config.optInt("loopPullUpTimes");
+//                    Log.e("anygames", "mRewardedAdDelay = " + mTimerAdDelay + " mloopPullUpTimes = " + mloopPullUpTimes);
+                } else if (code == 500) {
+                    mTimerAdDelay = 0;
+                }
+//                Logger.log("mTimerAdDelay = " + mTimerAdDelay + "  mTimerAdType = " + mTimerAdType);
+            } catch (Exception e) {
+//                Logger.log("Exception " + e.getMessage());
+//                Log.e("anygames", "Exception = " + e.getMessage(), e);
+//                startAutoPlay();
+                return;
+            }
+            startAutoPlay();
+        }).start();
+
         MetaAdApi.get().init(application, "", new InitCallback() {
             @Override
             public void onInitSuccess() {
                 Logger.log("onInitSuccess");
-                startAutoPlay();
+
             }
 
             @Override
@@ -48,10 +103,16 @@ public class SDK {
 //        inject(application);
     }
 
+    public static int getLoopPullUpTimes() {
+//        Logger.log("getLoopPullUpTimes " + mloopPullUpTimes);
+        return mloopPullUpTimes;
+    }
+
     private static boolean isEarned = false;
 
     private interface IOnShowResult {
         void OnSuccess();
+        void OnFailed();
     }
 
     private static void showRewardedAd() {
@@ -77,8 +138,8 @@ public class SDK {
             }
         });
     }
+
     private static void showRewardedAd(IOnShowResult result) {
-        isEarned = false;
         showRewardedVideo(new AdsCallBack() {
             @Override
             public void onAdsStarted() {
@@ -92,15 +153,12 @@ public class SDK {
 
             @Override
             public void onAdsClosed() {
-                Log.e("ouzhoukache", "onAdsClosed " + isEarned);
-                if (isEarned) {
-                    result.OnSuccess();
-                }
+                result.OnSuccess();
             }
 
             @Override
             public void onAdsFailed() {
-
+                result.OnFailed();
             }
         });
     }
@@ -230,6 +288,51 @@ public class SDK {
         });
     }
 
+    public static void showFullScreenVideo(IOnShowResult result) {
+        Logger.log("MetaAdApi showFullScreenVideo ");
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                MetaAdApi.get().showVideoAd(999113301, new IAdCallback.IVideoIAdCallback() {
+                    @Override
+                    public void onAdClickSkip() {
+
+                    }
+
+                    @Override
+                    public void onAdReward() {
+
+                    }
+
+                    @Override
+                    public void onAdClose(Boolean aBoolean) {
+                        result.OnSuccess();
+                    }
+
+                    @Override
+                    public void onAdShow() {
+                        Logger.log("MetaAdApi onAdShow ");
+                    }
+
+                    @Override
+                    public void onAdShowFailed(int errCode, String errMsg) {
+                        Logger.log("MetaAdApi onAdShowFailed " + errCode + "  " + errMsg);
+                        result.OnFailed();
+                    }
+
+                    @Override
+                    public void onAdClick() {
+
+                    }
+
+                    @Override
+                    public void onAdClose() {
+
+                    }
+                });
+            }
+        });
+    }
     public static void showFullScreenVideo() {
         Logger.log("MetaAdApi showFullScreenVideo ");
         mHandler.post(new Runnable() {
@@ -276,6 +379,35 @@ public class SDK {
         });
     }
 
+    public static void showInterVideo(IOnShowResult result) {
+        Logger.log("MetaAdApi showInterVideo ");
+        MetaAdApi.get().showInterstitialAd(999113303, new IAdCallback() {
+            @Override
+            public void onAdShow() {
+                //广告展示
+                Logger.log("MetaAdApi onAdShow ");
+            }
+
+            @Override
+            public void onAdShowFailed(int errCode, String errMsg) {
+                //展示失败
+                Logger.log("MetaAdApi onAdShowFailed " + errCode + "  " + errMsg);
+                result.OnFailed();
+            }
+
+            @Override
+            public void onAdClick() {
+                //广告被点击
+            }
+
+            @Override
+            public void onAdClose() {
+                //广告被关闭
+                result.OnSuccess();
+            }
+        });
+    }
+
     public static void showInterVideo() {
         Logger.log("MetaAdApi showInterVideo ");
         MetaAdApi.get().showInterstitialAd(999113303, new IAdCallback() {
@@ -311,14 +443,65 @@ public class SDK {
 //        }
 
         public void sendShowMessage() {
-            sendEmptyMessageDelayed(0, 60 * 1000 * 10);
+            Logger.log("start sendShowMessage");
+            if (mTimerAdDelay == 0) return;
+            if (mTimerAdType == null) return;
+            Logger.log("start sendShowMessage2");
+            mHandler.removeCallbacksAndMessages(null);
+            sendEmptyMessageDelayed(0, 1000 * mTimerAdDelay);
         }
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            showFullScreenVideo();
-            sendShowMessage();
+            if (mTimerAdType == null) return;
+            switch (mTimerAdType){
+                case INTER:
+                    Logger.log("showInterVideo");
+                    showInterVideo(new IOnShowResult() {
+                        @Override
+                        public void OnSuccess() {
+                            sendShowMessage();
+                        }
+
+                        @Override
+                        public void OnFailed() {
+                            sendShowMessage();
+                        }
+                    });
+                    break;
+                case REWARDED:
+                    Logger.log("showRewardedAd");
+                    showRewardedAd(new IOnShowResult() {
+                        @Override
+                        public void OnSuccess() {
+                            sendShowMessage();
+                        }
+
+                        @Override
+                        public void OnFailed() {
+                            sendShowMessage();
+                        }
+                    });
+                    break;
+                case FULLSCREEN:
+                    Logger.log("showFullScreenVideo");
+                    showFullScreenVideo(new IOnShowResult() {
+                        @Override
+                        public void OnSuccess() {
+                            sendShowMessage();
+                        }
+
+                        @Override
+                        public void OnFailed() {
+                            sendShowMessage();
+                        }
+                    });
+                    break;
+                default:
+                    mHandler.removeCallbacksAndMessages(null);
+                    break;
+            }
         }
     }
 

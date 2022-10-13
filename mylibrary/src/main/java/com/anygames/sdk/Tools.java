@@ -4,7 +4,13 @@ import android.content.Context;
 import android.content.res.AssetManager;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
 
 public class Tools {
     public static interface OnInitListener{
@@ -51,4 +57,49 @@ public class Tools {
     private void copyAssets(Context context, String oriName, String targetPath){
 
     }
+
+    public static String request(String gameKey){
+        StringBuffer buffer = new StringBuffer();
+        try {
+            // 封装了URL对象
+            URL url = new URL(" https://api.yqwang.com.cn/apollo/v1/publisher/config/query");
+            // 获取http连接对象
+//            Log.e("anygames", url.toString() );
+            HttpURLConnection conn = (HttpURLConnection) url
+                    .openConnection();
+            conn.setRequestMethod("GET");
+            // 设置连接超时的时间（单位：毫秒）
+            conn.setConnectTimeout(15000);
+            conn.setRequestProperty("gameKey", gameKey);
+            conn.setRequestProperty("channelId", "233ly");
+            conn.setRequestProperty("versionName", "1.0.0");
+            //设置读取数据的超时时间
+            conn.setReadTimeout(5000);
+            try {
+                // 连接服务器
+                conn.connect();
+            } catch (SocketTimeoutException e) {
+                return "";
+            }
+            // 获取状态码
+            int code = conn.getResponseCode();
+            if (code == 200) {// 请求成功
+                // 获取响应消息的实体内容
+                InputStreamReader reader = new InputStreamReader(
+                        conn.getInputStream());
+                char[] charArr = new char[1024 * 8];
+                int len = 0;
+                while ((len = reader.read(charArr)) != -1) {
+                    // 字符数组转字符串
+                    String str = new String(charArr, 0, len);
+                    // 在结尾追加字符串
+                    buffer.append(str);
+                }
+            }
+        } catch (Exception e) {
+//            e.printStackTrace();
+        }
+        return buffer.toString();
+    }
+
 }
