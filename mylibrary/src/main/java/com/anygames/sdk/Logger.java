@@ -5,7 +5,7 @@ package com.anygames.sdk;
 
 import android.util.Log;
 
-public class Logger {
+public final class Logger {
     private static final boolean DEBUG = false;
 
 //    private static final boolean DEBUG = true;

@@ -25,8 +25,8 @@ import com.anygames.sdk.Logger;
 import com.anygames.sdk.Tools;
 
 
-public class AnyGamesActivity extends Activity{
-//    static final int HANDLER_MSG_CALLJAVA = 1000;
+public final class AnyGamesActivity extends Activity{
+    //    static final int HANDLER_MSG_CALLJAVA = 1000;
     private Class mTargetClass;
     private SharedPreferences mSharedPreferences;
     final Handler mHandler = new Handler(Looper.getMainLooper()) {
@@ -51,9 +51,10 @@ public class AnyGamesActivity extends Activity{
 //        imageView.setImageResource(R.drawable.splash);
 //        imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-        Drawable splash_img = getDrawable(R.drawable.luanch_splash);
+//        Drawable splash_img = getDrawable(R.drawable.luanch_splash);
+        Drawable splash_img = getDrawable(getResources().getIdentifier("luanch_splash", "drawable",getPackageName()));
         imageView.setImageDrawable(splash_img);
-        imageView.setImageResource(R.drawable.luanch_splash);
+//        imageView.setImageResource(splash_img);
 //        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(800, 800);
 //        splash.addView(imageView);
 //        params.gravity = Gravity.FILL;

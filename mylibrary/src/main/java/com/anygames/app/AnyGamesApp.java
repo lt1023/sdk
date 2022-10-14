@@ -3,7 +3,7 @@ import android.app.Application;
 import android.content.Context;
 
 
-public class AnyGamesApp extends Application {
+public final class AnyGamesApp extends Application {
 
 
     @Override

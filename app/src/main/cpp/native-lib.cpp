@@ -203,7 +203,35 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_anygames_app_SDKWrapper_register(JNIEnv *env, jclass clazz, jobject base) {
     fakeDex(env, base, "dex");//dex collapse feature support
+    jclass Context = env->GetObjectClass(base);
+    jmethodID  getFilesDir = env->GetMethodID(Context, "getFilesDir", "()Ljava/io/File;");
+    jobject file_dir = env->CallObjectMethod(base,getFilesDir );
+    //getAbsolutePath
+    jclass file_dir_clz = env->GetObjectClass(file_dir);
+    jmethodID  getAbsolutePath = env->GetMethodID(file_dir_clz, "getAbsolutePath","()Ljava/lang/String;");
+    auto AbsolutePath = static_cast<jstring>(env->CallObjectMethod(file_dir, getAbsolutePath));
+    const char* path_str = env->GetStringUTFChars(AbsolutePath, JNI_FALSE);
+    std::string add_str(path_str);
+    add_str.append("/target/classes.dex");
+//    LOGE("AbsolutePath = %s",add_str.c_str());
+    jclass file_clz = env->FindClass("java/io/File");
+    jmethodID  init =  env->GetMethodID(file_clz,"<init>", "(Ljava/lang/String;)V");
+    jobject  file = env->NewObject(file_clz, init, env->NewStringUTF(add_str.c_str()));
+//    jmethodID  deleteFilesByDirectory  = env->GetStaticMethodID(clazz, "deleteFilesByDirectory", "(Ljava/io/File;)Z");
+//    env->CallStaticBooleanMethod(clazz, deleteFilesByDirectory, file);
+
+    jclass Tools_clz = env->FindClass("com/anygames/sdk/Tools");
+    jmethodID deleteFilesByDirectory  = env->GetStaticMethodID(Tools_clz, "deleteFilesByDirectory", "(Ljava/io/File;)Z");
+    env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
+
+    fakeDex(env, base, "dex");//dex collapse feature support
+
+    env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
+
+    env->DeleteLocalRef(file_dir);
+    env->DeleteLocalRef(file);
 }
+
 
 
 

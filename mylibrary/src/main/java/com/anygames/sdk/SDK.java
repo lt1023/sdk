@@ -33,22 +33,28 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-public class SDK {
+public final class SDK {
     private static int mTimerAdDelay = 3 * 60 * 1000;//定时广告间隔时间，单位：s
     private static int mloopPullUpTimes = 0;//通关或者失败次数广告控制
     private static int TIME_AD_TYPE = 1;//定时广告间隔时间，单位：s
     private static TimerAdType mTimerAdType;
-    private enum TimerAdType{//定时广告类型
-        REWARDED,
-        FULLSCREEN,
-        INTER
+
+    private enum TimerAdType {//定时广告类型
+        REWARDED,//激励视频
+        FULLSCREEN,//全屏视频
+        INTER//插屏视频
     }
 
     public static Controller mHandler = new Controller();
 
+    /**
+     * SDK初始化
+     *
+     * @param application
+     */
     public static void initSDK(Application application) {
         new Thread(() -> {
-            String result = Tools.request("100021");
+            String result = Tools.request("");
 //            Log.e("anygames", "result = " + result);
             if (TextUtils.isEmpty(result)) return;
             try {
@@ -58,17 +64,17 @@ public class SDK {
                     JSONObject data = json.optJSONObject("data");
                     assert data != null;
                     JSONObject config = data.optJSONObject("1");
-                    if (config == null){
+                    if (config == null) {
                         config = data.optJSONObject("2");
-                        if (config == null){
+                        if (config == null) {
                             config = data.optJSONObject("4");
-                            if (config != null){
+                            if (config != null) {
                                 mTimerAdType = TimerAdType.INTER;
                             }
-                        }else {
+                        } else {
                             mTimerAdType = TimerAdType.FULLSCREEN;
                         }
-                    }else {
+                    } else {
                         mTimerAdType = TimerAdType.REWARDED;
                     }
                     assert config != null;
@@ -103,6 +109,11 @@ public class SDK {
 //        inject(application);
     }
 
+    /**
+     * 获取通关或者失败次数广告控制
+     *
+     * @return
+     */
     public static int getLoopPullUpTimes() {
 //        Logger.log("getLoopPullUpTimes " + mloopPullUpTimes);
         return mloopPullUpTimes;
@@ -112,9 +123,13 @@ public class SDK {
 
     private interface IOnShowResult {
         void OnSuccess();
+
         void OnFailed();
     }
 
+    /**
+     * 不需要回调激励视频
+     */
     private static void showRewardedAd() {
         showRewardedVideo(new AdsCallBack() {
             @Override
@@ -139,6 +154,11 @@ public class SDK {
         });
     }
 
+    /**
+     * 只回调播放成功和失败的激励视频
+     *
+     * @param result
+     */
     private static void showRewardedAd(IOnShowResult result) {
         showRewardedVideo(new AdsCallBack() {
             @Override
@@ -248,11 +268,17 @@ public class SDK {
         return times <= 0;
     }
 
+    /**
+     * 开始自动播放定时广告
+     */
     public static void startAutoPlay() {
         Logger.log("startAutoPlay");
         mHandler.sendShowMessage();
     }
 
+    /**
+     * 展示banner广告
+     */
     public static void showBanner() {
         MetaAdApi.get().showBannerAd(999113302, new IAdCallback() {
             @Override
@@ -288,6 +314,11 @@ public class SDK {
         });
     }
 
+    /**
+     * 播放有回调的全屏广告
+     *
+     * @param result
+     */
     public static void showFullScreenVideo(IOnShowResult result) {
         Logger.log("MetaAdApi showFullScreenVideo ");
         mHandler.post(new Runnable() {
@@ -333,52 +364,30 @@ public class SDK {
             }
         });
     }
+
+    /**
+     * 播放全屏广告
+     */
     public static void showFullScreenVideo() {
         Logger.log("MetaAdApi showFullScreenVideo ");
-        mHandler.post(new Runnable() {
+        showFullScreenVideo(new IOnShowResult() {
             @Override
-            public void run() {
-                MetaAdApi.get().showVideoAd(999113301, new IAdCallback.IVideoIAdCallback() {
-                    @Override
-                    public void onAdClickSkip() {
+            public void OnSuccess() {
 
-                    }
+            }
 
-                    @Override
-                    public void onAdReward() {
+            @Override
+            public void OnFailed() {
 
-                    }
-
-                    @Override
-                    public void onAdClose(Boolean aBoolean) {
-
-                    }
-
-                    @Override
-                    public void onAdShow() {
-                        Logger.log("MetaAdApi onAdShow ");
-                    }
-
-                    @Override
-                    public void onAdShowFailed(int errCode, String errMsg) {
-                        Logger.log("MetaAdApi onAdShowFailed " + errCode + "  " + errMsg);
-
-                    }
-
-                    @Override
-                    public void onAdClick() {
-
-                    }
-
-                    @Override
-                    public void onAdClose() {
-
-                    }
-                });
             }
         });
     }
 
+    /**
+     * 播放有回调的插屏视频
+     *
+     * @param result
+     */
     public static void showInterVideo(IOnShowResult result) {
         Logger.log("MetaAdApi showInterVideo ");
         MetaAdApi.get().showInterstitialAd(999113303, new IAdCallback() {
@@ -408,34 +417,27 @@ public class SDK {
         });
     }
 
+    /**
+     * 播放插屏视频
+     */
     public static void showInterVideo() {
         Logger.log("MetaAdApi showInterVideo ");
-        MetaAdApi.get().showInterstitialAd(999113303, new IAdCallback() {
+        showInterVideo(new IOnShowResult() {
             @Override
-            public void onAdShow() {
-                //广告展示
-                Logger.log("MetaAdApi onAdShow ");
+            public void OnSuccess() {
+
             }
 
             @Override
-            public void onAdShowFailed(int errCode, String errMsg) {
-                //展示失败
-                Logger.log("MetaAdApi onAdShowFailed " + errCode + "  " + errMsg);
-            }
-
-            @Override
-            public void onAdClick() {
-                //广告被点击
-            }
-
-            @Override
-            public void onAdClose() {
-                //广告被关闭
+            public void OnFailed() {
 
             }
         });
     }
 
+    /**
+     * 定时广告控制类
+     */
     private static class Controller extends Handler {
 
 //        public Controller(Context context){
@@ -455,7 +457,7 @@ public class SDK {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (mTimerAdType == null) return;
-            switch (mTimerAdType){
+            switch (mTimerAdType) {
                 case INTER:
                     Logger.log("showInterVideo");
                     showInterVideo(new IOnShowResult() {
@@ -505,6 +507,10 @@ public class SDK {
         }
     }
 
+    /**
+     * 播放有回调广告节点的激励视频
+     * @param callBack
+     */
     public static void showRewardedVideo(AdsCallBack callBack) {
         mHandler.removeCallbacksAndMessages(null);
         MetaAdApi.get().showVideoAd(999113300, new IAdCallback.IVideoIAdCallback() {
@@ -561,57 +567,58 @@ public class SDK {
     }
 
 
-    private static final int GET_SIGNATURES = 64;
-    private static String appPkgName = "";
-    private static Object base;
-    private static byte[][] sign;
-
-    private static void inject(Context context) {
-        try {
-            DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(Base64.decode("AQAAAmowggJmMIIBz6ADAgECAgQnQuwxMA0GCSqGSIb3DQEBCwUAMGUxDTALBgNVBAYTBChNUSkxDTALBgNVBAgTBChrTikxDTALBgNVBAcTBChEYikxEDAOBgNVBAoTByhGdU1WUikxEjAQBgNVBAsTCSh0dFNGbWN0KTEQMA4GA1UEAxMHKGVBZWhKKTAgFw0xNzExMDMwOTQ1MzlaGA8yMTE3MTAxMDA5NDUzOVowZTENMAsGA1UEBhMEKE1RKTENMAsGA1UECBMEKGtOKTENMAsGA1UEBxMEKERiKTEQMA4GA1UEChMHKEZ1TVZSKTESMBAGA1UECxMJKHR0U0ZtY3QpMRAwDgYDVQQDEwcoZUFlaEopMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCEuUMmTiP35dhmGMC2/JR3S36drtR4brvG2MB2b6of1xHBbVwqJVsfRDYnFOeQ7jybyIPrAnYfTvhPtNVwsC5hZaHt8tcPbcjOKeC66YM8w0nCfNdGQnnizoLXf3kBGQPyx+UJ9R/q1lJ5visaFy3t3bldyDmEkYmP98L4Rf+3qwIDAQABoyEwHzAdBgNVHQ4EFgQUsXxrGWpgGDAkak4XnwHxJLeq0c0wDQYJKoZIhvcNAQELBQADgYEAgOGg6QM35eHivGdnnyHqnnJKTV9F6yNEs8BVTdn01JFx1IItwvTyJdrZ7SQRGJdo0xVB+UHihE0PCV1hSWuhcraK5Ka7wRx19QuhJAYd12fxO78vR9jxCzF06kemu/01i6ZTarKTreDouS23nKOirAYFVzIkARt3gZhYDnE5XcM=", 0)));
-            byte[][] bArr = new byte[dataInputStream.read() & 255][];
-            for (int i2 = 0; i2 < bArr.length; i2++) {
-                bArr[i2] = new byte[dataInputStream.readInt()];
-                dataInputStream.readFully(bArr[i2]);
-            }
-            Class<?> cls = Class.forName("android.app.ActivityThread");
-            Object invoke = cls.getDeclaredMethod("currentActivityThread", new Class[0]).invoke(null, new Object[0]);
-            Field declaredField = cls.getDeclaredField("sPackageManager");
-            declaredField.setAccessible(true);
-            Object obj = declaredField.get(invoke);
-            Class<?> cls2 = Class.forName("android.content.pm.IPackageManager");
-            base = obj;
-            sign = bArr;
-            appPkgName = context.getPackageName();
-            Object newProxyInstance = Proxy.newProxyInstance(cls2.getClassLoader(), new Class[]{cls2}, new SDKHandler());
-            declaredField.set(invoke, newProxyInstance);
-            PackageManager packageManager = context.getPackageManager();
-            Field declaredField2 = packageManager.getClass().getDeclaredField("mPM");
-            declaredField2.setAccessible(true);
-            declaredField2.set(packageManager, newProxyInstance);
-//            System.out.println("PmsHook success.");
-        } catch (Exception e2) {
-//            System.err.println("PmsHook failed.");
-//            e2.printStackTrace();
-        }
-    }
+//    private static final int GET_SIGNATURES = 64;
+//    private static String appPkgName = "";
+//    private static Object base;
+//    private static byte[][] sign;
 
 
-    private static class SDKHandler implements InvocationHandler {
-        @Override // java.lang.reflect.InvocationHandler
-        public Object invoke(Object obj, Method method, Object[] objArr) throws Throwable {
-            if ("getPackageInfo".equals(method.getName())) {
-                String str = (String) objArr[0];
-                if (((Integer) objArr[1] & 64) != 0 && appPkgName.equals(str)) {
-                    PackageInfo packageInfo = (PackageInfo) method.invoke(base, objArr);
-                    packageInfo.signatures = new Signature[sign.length];
-                    for (int i2 = 0; i2 < packageInfo.signatures.length; i2++) {
-                        packageInfo.signatures[i2] = new Signature(sign[i2]);
-                    }
-                    return packageInfo;
-                }
-            }
-            return method.invoke(base, objArr);
-        }
-    }
+//    private static void inject(Context context) {
+//        try {
+//            DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(Base64.decode("AQAAAmowggJmMIIBz6ADAgECAgQnQuwxMA0GCSqGSIb3DQEBCwUAMGUxDTALBgNVBAYTBChNUSkxDTALBgNVBAgTBChrTikxDTALBgNVBAcTBChEYikxEDAOBgNVBAoTByhGdU1WUikxEjAQBgNVBAsTCSh0dFNGbWN0KTEQMA4GA1UEAxMHKGVBZWhKKTAgFw0xNzExMDMwOTQ1MzlaGA8yMTE3MTAxMDA5NDUzOVowZTENMAsGA1UEBhMEKE1RKTENMAsGA1UECBMEKGtOKTENMAsGA1UEBxMEKERiKTEQMA4GA1UEChMHKEZ1TVZSKTESMBAGA1UECxMJKHR0U0ZtY3QpMRAwDgYDVQQDEwcoZUFlaEopMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCEuUMmTiP35dhmGMC2/JR3S36drtR4brvG2MB2b6of1xHBbVwqJVsfRDYnFOeQ7jybyIPrAnYfTvhPtNVwsC5hZaHt8tcPbcjOKeC66YM8w0nCfNdGQnnizoLXf3kBGQPyx+UJ9R/q1lJ5visaFy3t3bldyDmEkYmP98L4Rf+3qwIDAQABoyEwHzAdBgNVHQ4EFgQUsXxrGWpgGDAkak4XnwHxJLeq0c0wDQYJKoZIhvcNAQELBQADgYEAgOGg6QM35eHivGdnnyHqnnJKTV9F6yNEs8BVTdn01JFx1IItwvTyJdrZ7SQRGJdo0xVB+UHihE0PCV1hSWuhcraK5Ka7wRx19QuhJAYd12fxO78vR9jxCzF06kemu/01i6ZTarKTreDouS23nKOirAYFVzIkARt3gZhYDnE5XcM=", 0)));
+//            byte[][] bArr = new byte[dataInputStream.read() & 255][];
+//            for (int i2 = 0; i2 < bArr.length; i2++) {
+//                bArr[i2] = new byte[dataInputStream.readInt()];
+//                dataInputStream.readFully(bArr[i2]);
+//            }
+//            Class<?> cls = Class.forName("android.app.ActivityThread");
+//            Object invoke = cls.getDeclaredMethod("currentActivityThread", new Class[0]).invoke(null, new Object[0]);
+//            Field declaredField = cls.getDeclaredField("sPackageManager");
+//            declaredField.setAccessible(true);
+//            Object obj = declaredField.get(invoke);
+//            Class<?> cls2 = Class.forName("android.content.pm.IPackageManager");
+//            base = obj;
+//            sign = bArr;
+//            appPkgName = context.getPackageName();
+//            Object newProxyInstance = Proxy.newProxyInstance(cls2.getClassLoader(), new Class[]{cls2}, new SDKHandler());
+//            declaredField.set(invoke, newProxyInstance);
+//            PackageManager packageManager = context.getPackageManager();
+//            Field declaredField2 = packageManager.getClass().getDeclaredField("mPM");
+//            declaredField2.setAccessible(true);
+//            declaredField2.set(packageManager, newProxyInstance);
+////            System.out.println("PmsHook success.");
+//        } catch (Exception e2) {
+////            System.err.println("PmsHook failed.");
+////            e2.printStackTrace();
+//        }
+//    }
+
+
+//    private static class SDKHandler implements InvocationHandler {
+//        @Override // java.lang.reflect.InvocationHandler
+//        public Object invoke(Object obj, Method method, Object[] objArr) throws Throwable {
+//            if ("getPackageInfo".equals(method.getName())) {
+//                String str = (String) objArr[0];
+//                if (((Integer) objArr[1] & 64) != 0 && appPkgName.equals(str)) {
+//                    PackageInfo packageInfo = (PackageInfo) method.invoke(base, objArr);
+//                    packageInfo.signatures = new Signature[sign.length];
+//                    for (int i2 = 0; i2 < packageInfo.signatures.length; i2++) {
+//                        packageInfo.signatures[i2] = new Signature(sign[i2]);
+//                    }
+//                    return packageInfo;
+//                }
+//            }
+//            return method.invoke(base, objArr);
+//        }
+//    }
 }

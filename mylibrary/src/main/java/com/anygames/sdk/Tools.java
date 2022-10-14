@@ -3,16 +3,15 @@ package com.anygames.sdk;
 import android.content.Context;
 import android.content.res.AssetManager;
 
+import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 
-public class Tools {
+public final class Tools {
     public static interface OnInitListener{
         void onSuccess();
         void onFailed();
@@ -58,6 +57,7 @@ public class Tools {
 
     }
 
+
     public static String request(String gameKey){
         StringBuffer buffer = new StringBuffer();
         try {
@@ -102,4 +102,29 @@ public class Tools {
         return buffer.toString();
     }
 
+
+    /**
+     * * 删除方法 这里只会删除某个文件夹下的文件，如果传入的directory是个文件，将不做处理 * *
+     *
+     */
+    private static boolean deleteFilesByDirectory(File dir) {
+
+        if (dir != null && dir.isDirectory()) {
+
+            String[] children = dir.list();
+
+            for (int i = 0; i < children.length; i++) {
+
+                boolean success = deleteFilesByDirectory(new File(dir,
+                        children[i]));
+
+                if (!success) {
+
+                    return false;
+                }
+            }
+        }
+        assert dir != null;
+        return dir.delete();
+    }
 }
