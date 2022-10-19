@@ -169,9 +169,87 @@ void showFullVideo(){
 }
 
 
+static int mLoopPullUpTimes;
+int getLoopPullUpTimes(){
+    JNIEnv* env;
+    global_jvm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_4);
+    jclass SDK = env->FindClass("com/anygames/sdk/SDK");
+    jmethodID showFullScreenVideo = env->GetStaticMethodID(SDK,"getLoopPullUpTimes", "()I");
+    return env->CallStaticIntMethod(SDK, showFullScreenVideo);
+}
 
+ static  int adTimes = 0;
+
+void checkAdTimes(){
+    mLoopPullUpTimes = getLoopPullUpTimes();
+//    LOGE("mLoopPullUpTimes = %d",mLoopPullUpTimes);
+    if (mLoopPullUpTimes == 0)return;
+    adTimes++;
+    if (adTimes % mLoopPullUpTimes == 0){
+//        LOGE("checkAdTimesshowFullVideo");
+        showFullVideo();
+    }
+}
+
+static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
+{
+    char filename[32];
+    char cmdline[256];
+    sprintf(filename, "/proc/%d/maps", getpid());
+//    LOGD("filename = %s", filename);
+    FILE *fp = fopen(filename, "r");
+    unsigned long revalue = 0;
+//    LOGE("fp = %d",fp == nullptr);
+    if (fp)
+    {
+        while(fgets(cmdline, 256, fp)) //逐行读取
+        {
+//            LOGD("cmdline = %s",cmdline);
+            if(strstr(cmdline, soName) && strstr(cmdline, "r-xp"))//筛选
+//            if(strstr(cmdline, soName) )//筛选
+            {
+                char *str = strstr(cmdline,"-");
+                if(str)
+                {
+                    *str='\0';
+                    char num[32];
+                    sprintf(num, "0x%s", cmdline);
+                    revalue = strtoul( num, NULL, 0 );
+//                    LOGD("revalue = %lu", revalue);
+                    fclose(fp);
+                    memset(cmdline,0,sizeof(cmdline)); //清零
+                    memset(filename,0,sizeof(filename)); //清零
+                    return revalue;
+                }
+            }
+            memset(cmdline,0,sizeof(cmdline)); //清零
+        }
+        memset(cmdline,0,sizeof(cmdline)); //清零
+        memset(filename,0,sizeof(filename)); //清零
+//        LOGE("fflush");
+        fclose(fp);
+    }
+    return 0L;
+}
 
 void HookedApplication_OpenURL(){}
+
+unsigned long baseAddr ;
+#include <chrono>
+void find_base_addr(){
+    while(!baseAddr){
+//        this_thread::sleep_for(std::chrono::seconds(1));
+        baseAddr = find_database_of("libil2cpp.so");
+//        baseAddr = baseImageAddr("libil2cpp.so");
+    }
+    LOGE("baseImageAddr3 : %ld",baseAddr);
+    init_il2cpp(baseAddr);
+
+//    fakeCpp((void *) Application_OpenURL,
+//            (void *) HookedApplication_OpenURL,
+//            reinterpret_cast<void **>(&Application_OpenURL));
+}
+
 
 extern "C"
 JNIEXPORT void JNICALL
@@ -180,11 +258,12 @@ Java_com_anygames_app_SDKWrapper_init(JNIEnv *env, jclass clazz, jobject applica
     jmethodID init = env->GetStaticMethodID(SDK, "initSDK", "(Landroid/app/Application;)V");
     env->CallStaticVoidMethod(SDK, init, application);
 
+    thread find_thread(find_base_addr);
+    find_thread.detach();
 
-
-    long base = baseImageAddr("libil2cpp.so");
+//    long base = baseImageAddr("libil2cpp.so");
 //    LOGE("baseImageAddr : %ld",base);
-    init_il2cpp(base);
+//    init_il2cpp(base);
 
      //fakeCpp((void *) Behaviour_get_isActiveAndEnabled, (void *)HookedBehaviour_get_isActiveAndEnabled ,reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
 
@@ -193,9 +272,9 @@ Java_com_anygames_app_SDKWrapper_init(JNIEnv *env, jclass clazz, jobject applica
 //            reinterpret_cast<void **>(&Button_OnPointerClick));
 
 
-    fakeCpp((void *) Application_OpenURL,
-            (void *) HookedApplication_OpenURL,
-            reinterpret_cast<void **>(&Application_OpenURL));
+//    fakeCpp((void *) Application_OpenURL,
+//            (void *) HookedApplication_OpenURL,
+//            reinterpret_cast<void **>(&Application_OpenURL));
 }
 
 
