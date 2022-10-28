@@ -235,7 +235,9 @@ static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.s
 void HookedApplication_OpenURL(){}
 
 unsigned long baseAddr ;
-#include <chrono>
+//#include <chrono>
+#include <thread>
+
 void find_base_addr(){
     while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));

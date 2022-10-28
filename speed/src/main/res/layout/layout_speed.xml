@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:orientation="vertical"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:id="@+id/speed2"
+        android:layout_margin="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:id="@+id/speed2_view"
+                android:layout_centerInParent="true"
+                android:orientation="vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <TextView
+                    android:background="@drawable/bg_speed"
+                    android:padding="16dp"
+                    android:id="@+id/speed2_tv"
+                    android:text="2 X"
+                    android:textColor="@android:color/white"
+                    android:textSize="24sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+                <TextView
+                    android:layout_gravity="center_horizontal"
+                    android:id="@+id/speed_time_tv"
+                    android:layout_marginTop="6dp"
+                    android:textSize="8sp"
+                    android:text="观看广告加速3分钟"
+                    android:textColor="@android:color/white"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/speed2_finger"
+                android:layout_gravity="center"
+                android:src="@drawable/click_left"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:visibility="gone"
+        android:id="@+id/speed3"
+        android:layout_margin="10dp"
+        android:padding="16dp"
+        android:background="@drawable/bg_speed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_centerInParent="true"
+            android:text="3 X"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
+
+</LinearLayout>

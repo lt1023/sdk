@@ -1,3 +1,4 @@
+include ':speed'
 include ':inlinhook'
 include ':mylibrary2'
 include ':mylibrary'

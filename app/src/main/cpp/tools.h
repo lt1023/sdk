@@ -99,18 +99,6 @@ void HookedOnPointerClick(void *arg1, void *arg2) {
                     showRewardedAd();
                 }
             }
-            if (strcmp(s, "Restart") == 0) {
-                RestartClickTimes++;
-                if (RestartClickTimes % 3 == 0) {
-                    showRewardedAd();
-                }
-            }
-            if (strcmp(s, "Playground") == 0
-                ||strcmp(s, "FLY MOD") == 0
-                ||strcmp(s, "CRUSH MOD") == 0
-                    ) {
-                showRewardedAd();
-            }
         }
     }
     return OnPointerClick(arg1, arg2);
