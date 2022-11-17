@@ -2,6 +2,7 @@ package com.anygames.sdk;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.text.TextUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,6 +60,7 @@ public final class Tools {
 
 
     public static String request(String gameKey){
+        if (TextUtils.isEmpty(gameKey))return null;
         StringBuffer buffer = new StringBuffer();
         try {
             // 封装了URL对象

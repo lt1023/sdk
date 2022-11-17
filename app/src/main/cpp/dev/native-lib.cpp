@@ -69,44 +69,88 @@ void checkAdTimes(){
     }
 }
 
+//static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
+//{
+//    char filename[32];
+//    char cmdline[256];
+//    sprintf(filename, "/proc/%d/maps", getpid());
+////    LOGD("filename = %s", filename);
+//    FILE *fp = fopen(filename, "r");
+//    unsigned long revalue = 0;
+////    LOGE("fp = %d",fp == nullptr);
+//    if (fp)
+//    {
+//        while(fgets(cmdline, 256, fp)) //逐行读取
+//        {
+////            LOGD("cmdline = %s",cmdline);
+//            if(strstr(cmdline, soName) && strstr(cmdline, "r-xp"))//筛选
+////            if (strstr(cmdline, soName) && strstr(cmdline, "r--p"))//筛选
+//
+////            if(strstr(cmdline, soName) )//筛选
+//            {
+//                char *str = strstr(cmdline,"-");
+//                if(str)
+//                {
+//                    *str='\0';
+//                    char num[32];
+//                    sprintf(num, "0x%s", cmdline);
+//                    revalue = strtoul( num, NULL, 0 );
+////                    LOGD("revalue = %lu", revalue);
+//                    fclose(fp);
+//                    memset(cmdline,0,sizeof(cmdline)); //清零
+//                    memset(filename,0,sizeof(filename)); //清零
+//                    return revalue;
+//                }
+//            }
+//            memset(cmdline,0,sizeof(cmdline)); //清零
+//        }
+//        memset(cmdline,0,sizeof(cmdline)); //清零
+//        memset(filename,0,sizeof(filename)); //清零
+////        LOGE("fflush");
+//        fclose(fp);
+//    }
+//    return 0L;
+//}
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
 {
     char filename[32];
-    char cmdline[256];
+//    char cmdline[256];
     sprintf(filename, "/proc/%d/maps", getpid());
 //    LOGD("filename = %s", filename);
-    FILE *fp = fopen(filename, "r");
     unsigned long revalue = 0;
-//    LOGE("fp = %d",fp == nullptr);
-    if (fp)
-    {
-        while(fgets(cmdline, 256, fp)) //逐行读取
+    std::ifstream file;
+    file.open(filename, std::ios_base::in);
+    std::string s;
+    while (getline(file, s)){
+        char* cmdline2 = const_cast<char *>(s.c_str());
+//        copy(s,cmdline);
+        if(strstr(cmdline2, soName) && strstr(cmdline2, "r-xp"))//筛选
         {
-//            LOGD("cmdline = %s",cmdline);
-            if(strstr(cmdline, soName) && strstr(cmdline, "r-xp"))//筛选
-//            if(strstr(cmdline, soName) )//筛选
             {
-                char *str = strstr(cmdline,"-");
+                char *str = strstr(cmdline2,"-");
                 if(str)
                 {
                     *str='\0';
                     char num[32];
-                    sprintf(num, "0x%s", cmdline);
+                    sprintf(num, "0x%s", cmdline2);
                     revalue = strtoul( num, NULL, 0 );
 //                    LOGD("revalue = %lu", revalue);
-                    fclose(fp);
-                    memset(cmdline,0,sizeof(cmdline)); //清零
+//                    fclose(file);
+                    memset(cmdline2,0,sizeof(cmdline2)); //清零
                     memset(filename,0,sizeof(filename)); //清零
+                    file.close();
                     return revalue;
                 }
             }
-            memset(cmdline,0,sizeof(cmdline)); //清零
+            memset(cmdline2,0,sizeof(cmdline2)); //清零
         }
-        memset(cmdline,0,sizeof(cmdline)); //清零
-        memset(filename,0,sizeof(filename)); //清零
-//        LOGE("fflush");
-        fclose(fp);
     }
+    file.close();
     return 0L;
 }
 

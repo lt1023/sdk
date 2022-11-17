@@ -1,3 +1,4 @@
+include ':gifchest'
 include ':speed'
 include ':inlinhook'
 include ':mylibrary2'

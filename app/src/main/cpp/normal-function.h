@@ -109,3 +109,5 @@ void init_isActiveAndEnabled(long addr_get_isActiveAndEnabled, long addr_gameobj
 
 
 
+void (*Text_set_text)(void* obj, void*value) = nullptr;
+void* (*il2cpp_string_new)(const char *value) = nullptr;

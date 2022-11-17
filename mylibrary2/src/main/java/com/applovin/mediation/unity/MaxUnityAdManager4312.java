@@ -1,49 +1,51 @@
-package com.applovin.mediation;
+package com.applovin.mediation.unity;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.DisplayCutout;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.anygames.sdk.AdsCallBack;
 import com.anygames.sdk.SDK;
-import com.applovin.impl.sdk.utils.BundleUtils;
-import com.applovin.impl.sdk.utils.JsonUtils;
+import com.applovin.mediation.MaxAd;
+import com.applovin.mediation.MaxAdFormat;
 import com.applovin.mediation.MaxAdListener;
 import com.applovin.mediation.MaxAdRevenueListener;
 import com.applovin.mediation.MaxAdViewAdListener;
-import com.applovin.mediation.MaxAdWaterfallInfo;
 import com.applovin.mediation.MaxError;
-import com.applovin.mediation.MaxNetworkResponseInfo;
 import com.applovin.mediation.MaxReward;
 import com.applovin.mediation.MaxRewardedAdListener;
 import com.applovin.mediation.ads.MaxAdView;
 import com.applovin.mediation.ads.MaxInterstitialAd;
 import com.applovin.mediation.ads.MaxRewardedAd;
 import com.applovin.mediation.ads.MaxRewardedInterstitialAd;
-import com.applovin.sdk.AppLovinMediationProvider;
 import com.applovin.sdk.AppLovinSdk;
 import com.applovin.sdk.AppLovinSdkConfiguration;
 import com.applovin.sdk.AppLovinSdkSettings;
 import com.applovin.sdk.AppLovinSdkUtils;
 import com.applovin.sdk.AppLovinUserService;
 import com.applovin.sdk.AppLovinVariableService;
-import com.google.firebase.remoteconfig.RemoteConfigConstants;
 import com.ironsource.mediationsdk.utils.IronSourceConstants;
+import com.tapjoy.TJAdUnitConstants;
 import com.unity3d.player.UnityPlayer;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.lang.Thread;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -62,17 +64,14 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     private static final String DEFAULT_AD_VIEW_POSITION = "top_left";
     private static final String SDK_TAG = "AppLovinSdk";
     private static final String TAG = "MaxUnityAdManager";
-    private static final String VERSION = "5.3.0";
-    private static BackgroundCallback backgroundCallback;
+    private static final String VERSION = "4.3.12";
     private static WeakReference<Activity> currentActivity;
     private static MaxUnityAdManager instance;
     private final Map<String, MaxAd> mAdInfoMap;
     private final Object mAdInfoMapLock;
     private final List<String> mAdUnitIdsToShowAfterCreate;
     private final Map<String, MaxAdFormat> mAdViewAdFormats;
-    private final Map<String, String> mAdViewCustomDataToSetAfterCreate;
     private final Map<String, Map<String, String>> mAdViewExtraParametersToSetAfterCreate;
-    private final Map<String, Map<String, Object>> mAdViewLocalExtraParametersToSetAfterCreate;
     private final Map<String, Point> mAdViewOffsets;
     private final Map<String, String> mAdViewPositions;
     private final Map<String, Integer> mAdViewWidths;
@@ -86,49 +85,10 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     private final Map<String, MaxRewardedInterstitialAd> mRewardedInterstitialAds;
     private View mSafeAreaBackground;
     private AppLovinSdk sdk;
+    private static final String SERIALIZED_KEY_VALUE_SEPARATOR = String.valueOf((char) 28);
+    private static final String SERIALIZED_KEY_VALUE_PAIR_SEPARATOR = String.valueOf((char) 29);
     private static final Point DEFAULT_AD_VIEW_OFFSET = new Point(0, 0);
     private static final ScheduledThreadPoolExecutor sThreadPoolExecutor = new ScheduledThreadPoolExecutor(3, new SdkThreadFactory());
-
-
-    public AppLovinSdk initializeSdkWithCompletionHandler(String str, String str2, String str3, final Listener listener) {
-        Activity currentActivity2 = getCurrentActivity();
-        this.sdk = AppLovinSdk.getInstance(str, generateSdkSettings(str2, str3, currentActivity2), currentActivity2);
-        this.sdk.getVariableService().setOnVariablesUpdateListener(this);
-        this.sdk.setPluginVersion("Max-Unity-4.3.12");
-        this.sdk.setMediationProvider("max");
-        this.sdk.initializeSdk(new AppLovinSdk.SdkInitializationListener() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.3
-            @Override // com.applovin.sdk.AppLovinSdk.SdkInitializationListener
-            public void onSdkInitialized(AppLovinSdkConfiguration appLovinSdkConfiguration) {
-
-            }
-        });
-        listener.onSdkInitializationComplete(new AppLovinSdkConfiguration() {
-            @Override
-            public ConsentDialogState getConsentDialogState() {
-                return ConsentDialogState.UNKNOWN;
-            }
-
-            @Override
-            public String getCountryCode() {
-                return "CN";
-            }
-        });
-        HashMap hashMap = new HashMap(3);
-        hashMap.put("name", "OnSdkInitializedEvent");
-        hashMap.put("consentDialogState", "2");
-        hashMap.put(RemoteConfigConstants.RequestFieldKey.COUNTRY_CODE, "CN");
-        MaxUnityAdManager.forwardUnityEvent(new JSONObject(hashMap));
-        return this.sdk;
-    }
-
-
-
-
-
-    /* loaded from: classes.dex */
-    public interface BackgroundCallback {
-        void onEvent(String str);
-    }
 
     /* loaded from: classes.dex */
     public interface Listener {
@@ -175,8 +135,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         this.mAdInfoMap = new HashMap();
         this.mAdInfoMapLock = new Object();
         this.mAdViewExtraParametersToSetAfterCreate = new HashMap(1);
-        this.mAdViewLocalExtraParametersToSetAfterCreate = new HashMap(1);
-        this.mAdViewCustomDataToSetAfterCreate = new HashMap(1);
         this.mAdUnitIdsToShowAfterCreate = new ArrayList(2);
         this.mDisabledAdaptiveBannerAdUnitIds = new HashSet(2);
         getCurrentActivity().runOnUiThread(new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.1
@@ -213,37 +171,23 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         return instance;
     }
 
-    public AppLovinSdk initializeSdkWithCompletionHandler(String str, String str2, String str3, BackgroundCallback backgroundCallback2, final Listener listener) {
-        backgroundCallback = backgroundCallback2;
+    public AppLovinSdk initializeSdkWithCompletionHandler(String str, String str2, String str3, final Listener listener) {
         Activity currentActivity2 = getCurrentActivity();
-        AppLovinSdk appLovinSdk = AppLovinSdk.getInstance(str, generateSdkSettings(str2, str3, currentActivity2), currentActivity2);
-        this.sdk = appLovinSdk;
-        appLovinSdk.getVariableService().setOnVariablesUpdateListener(this);
-        this.sdk.setPluginVersion("Max-Unity-5.3.0");
-        this.sdk.setMediationProvider(AppLovinMediationProvider.MAX);
+        this.sdk = AppLovinSdk.getInstance(str, generateSdkSettings(str2, str3, currentActivity2), currentActivity2);
+        this.sdk.getVariableService().setOnVariablesUpdateListener(this);
+        this.sdk.setPluginVersion("Max-Unity-4.3.12");
+        this.sdk.setMediationProvider("max");
         this.sdk.initializeSdk(new AppLovinSdk.SdkInitializationListener() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.3
             @Override // com.applovin.sdk.AppLovinSdk.SdkInitializationListener
             public void onSdkInitialized(AppLovinSdkConfiguration appLovinSdkConfiguration) {
-
+                listener.onSdkInitializationComplete(appLovinSdkConfiguration);
+                HashMap hashMap = new HashMap(3);
+                hashMap.put("name", "OnSdkInitializedEvent");
+                hashMap.put("consentDialogState", Integer.toString(appLovinSdkConfiguration.getConsentDialogState().ordinal()));
+                hashMap.put("countryCode", appLovinSdkConfiguration.getCountryCode());
+                MaxUnityAdManager.forwardUnityEvent(hashMap);
             }
         });
-        listener.onSdkInitializationComplete(new AppLovinSdkConfiguration() {
-            @Override
-            public ConsentDialogState getConsentDialogState() {
-                return ConsentDialogState.UNKNOWN;
-            }
-
-            @Override
-            public String getCountryCode() {
-                return "CN";
-            }
-        });
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "name", "OnSdkInitializedEvent");
-        JsonUtils.putString(jSONObject, "consentDialogState", "2");
-        JsonUtils.putString(jSONObject, "countryCode", "CN");
-        JsonUtils.putString(jSONObject, "isSuccessfullyInitialized", String.valueOf(MaxUnityAdManager.this.sdk.isInitialized()));
-        MaxUnityAdManager.forwardUnityEvent(jSONObject);
         return this.sdk;
     }
 
@@ -254,12 +198,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
 
     public void setBannerPlacement(String str, String str2) {
-    }
-
-    public void startBannerAutoRefresh(String str) {
-    }
-
-    public void stopBannerAutoRefresh(String str) {
     }
 
     public void setBannerWidth(String str, int i) {
@@ -286,12 +224,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     public void setBannerExtraParameter(String str, String str2, String str3) {
     }
 
-    public void setBannerLocalExtraParameter(String str, String str2, Object obj) {
-    }
-
-    public void setBannerCustomData(String str, String str2) {
-    }
-
     public String getBannerLayout(String str) {
         return getAdViewLayout(str, getAdViewAdFormat(str));
     }
@@ -309,12 +241,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     public void setMRecPlacement(String str, String str2) {
     }
 
-    public void startMRecAutoRefresh(String str) {
-    }
-
-    public void stopMRecAutoRefresh(String str) {
-    }
-
     public void updateMRecPosition(String str, String str2) {
     }
 
@@ -328,12 +254,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
 
     public void setMRecExtraParameter(String str, String str2, String str3) {
-    }
-
-    public void setMRecLocalExtraParameter(String str, String str2, Object obj) {
-    }
-
-    public void setMRecCustomData(String str, String str2) {
     }
 
     public String getMRecLayout(String str) {
@@ -378,17 +298,15 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         return false;
     }
 
-    public void showInterstitial(String str, String str2, String str3) {
+    public void showInterstitial(String str, String str2) {
     }
 
     public void setInterstitialExtraParameter(String str, String str2, String str3) {
     }
 
-    public void setInterstitialLocalExtraParameter(String str, String str2, Object obj) {
-    }
     private void OnRewardedAdLoadedEvent(String str){
         try {
-            JSONObject jsonObject = new JSONObject();
+            Map jsonObject = new HashMap();
             jsonObject.put("adUnitId", str);
             jsonObject.put("name", "OnRewardedAdLoadedEvent");
 //            jsonObject.put("adFormat", "");
@@ -405,7 +323,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
     private void OnRewardedAdDisplayedEvent(String str){
         try {
-            JSONObject jsonObject = new JSONObject();
+            Map jsonObject = new HashMap();
             jsonObject.put("adUnitId", str);
             jsonObject.put("name", "OnRewardedAdDisplayedEvent");
 //            jsonObject.put("adFormat", "1");
@@ -419,7 +337,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
     private void OnRewardedAdHiddenEvent(String str){
         try {
-            JSONObject jsonObject = new JSONObject();
+            Map jsonObject = new HashMap();
             jsonObject.put("adUnitId", str);
             jsonObject.put("name", "OnRewardedAdHiddenEvent");
 //            jsonObject.put("adFormat", "");
@@ -436,7 +354,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
     private void OnRewardedAdFailedToDisplayEvent(String str){
         try {
-            JSONObject jsonObject = new JSONObject();
+            Map jsonObject = new HashMap();
             jsonObject.put("adUnitId", str);
             jsonObject.put("name", "OnRewardedAdFailedToDisplayEvent");
             jsonObject.put("adFormat", "");
@@ -454,7 +372,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
     private void OnRewardedAdReceivedRewardEvent(String str){
         try {
-            JSONObject jsonObject = new JSONObject();
+            Map jsonObject = new HashMap();
             jsonObject.put("adUnitId", str);
             jsonObject.put("name", "OnRewardedAdReceivedRewardEvent");
 //            jsonObject.put("adFormat", "");
@@ -470,7 +388,6 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
             forwardUnityEvent(jsonObject);
         }catch (Exception e){}
     }
-
 
     public void loadRewardedAd(String str) {
         OnRewardedAdLoadedEvent(str);
@@ -519,9 +436,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
 
     public void setRewardedAdExtraParameter(String str, String str2, String str3) {
-    }
-
-    public void setRewardedAdLocalExtraParameter(String str, String str2, Object obj) {
+        retrieveRewardedAd(str).setExtraParameter(str2, str3);
     }
 
     public void loadRewardedInterstitialAd(String str) {
@@ -534,26 +449,14 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     public void showRewardedInterstitialAd(String str, String str2) {
     }
 
-
-    public static String propsStrFromDictionary(Map<String, String> map) {
-        StringBuilder sb = new StringBuilder(64);
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            sb.append(entry.getKey());
-            sb.append("=");
-            sb.append(entry.getValue());
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
-
-
     public void setRewardedInterstitialAdExtraParameter(String str, String str2, String str3) {
     }
 
-    public void setRewardedInterstitialAdLocalExtraParameter(String str, String str2, Object obj) {
-    }
-
     public void trackEvent(String str, String str2) {
+        if (this.sdk == null) {
+            return;
+        }
+        this.sdk.getEventService().trackEvent(str, deserializeParameters(str2));
     }
 
     @Deprecated
@@ -563,78 +466,36 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
     @Override // com.applovin.sdk.AppLovinVariableService.OnVariablesUpdateListener
     public void onVariablesUpdate(Bundle bundle) {
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "name", "OnVariablesUpdatedEvent");
-        forwardUnityEvent(jSONObject);
+        HashMap hashMap = new HashMap(1);
+        hashMap.put("name", "OnVariablesUpdatedEvent");
+        forwardUnityEvent(hashMap);
     }
 
     @Override // com.applovin.sdk.AppLovinUserService.OnConsentDialogDismissListener
     public void onDismiss() {
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "name", "OnSdkConsentDialogDismissedEvent");
-        forwardUnityEvent(jSONObject);
+        HashMap hashMap = new HashMap(1);
+        hashMap.put("name", "OnSdkConsentDialogDismissedEvent");
+        forwardUnityEvent(hashMap);
     }
 
     public String getAdInfo(String str) {
         MaxAd ad;
-        return (!TextUtils.isEmpty(str) && (ad = getAd(str)) != null) ? getAdInfo(ad).toString() : "";
+        return (!TextUtils.isEmpty(str) && (ad = getAd(str)) != null) ? propsStrFromDictionary(getAdInfo(ad)) : "";
     }
 
-    private JSONObject getAdInfo(MaxAd maxAd) {
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "adUnitId", maxAd.getAdUnitId());
-        JsonUtils.putString(jSONObject, "adFormat", maxAd.getFormat().getLabel());
-        JsonUtils.putString(jSONObject, "networkName", maxAd.getNetworkName());
-        JsonUtils.putString(jSONObject, "networkPlacement", maxAd.getNetworkPlacement());
+    private Map<String, String> getAdInfo(MaxAd maxAd) {
+        HashMap hashMap = new HashMap(5);
+        hashMap.put("adUnitId", maxAd.getAdUnitId());
+        hashMap.put("networkName", maxAd.getNetworkName());
+        hashMap.put("networkPlacement", maxAd.getNetworkPlacement());
         String str = "";
-        JsonUtils.putString(jSONObject, "creativeId", !TextUtils.isEmpty(maxAd.getCreativeId()) ? maxAd.getCreativeId() : str);
+        hashMap.put("creativeId", !TextUtils.isEmpty(maxAd.getCreativeId()) ? maxAd.getCreativeId() : str);
         if (!TextUtils.isEmpty(maxAd.getPlacement())) {
             str = maxAd.getPlacement();
         }
-        JsonUtils.putString(jSONObject, "placement", str);
-        JsonUtils.putString(jSONObject, "revenue", String.valueOf(maxAd.getRevenue()));
-        JsonUtils.putString(jSONObject, "revenuePrecision", "");
-        JsonUtils.putJSONObject(jSONObject, "waterfallInfo", createAdWaterfallInfo(maxAd.getWaterfall()));
-        return jSONObject;
-    }
-
-    private JSONObject createAdWaterfallInfo(MaxAdWaterfallInfo maxAdWaterfallInfo) {
-        JSONObject jSONObject = new JSONObject();
-        if (maxAdWaterfallInfo == null) {
-            return jSONObject;
-        }
-        JsonUtils.putString(jSONObject, "name", "");
-        JSONArray jSONArray = new JSONArray();
-        for (MaxNetworkResponseInfo maxNetworkResponseInfo : maxAdWaterfallInfo.getNetworkResponses()) {
-            jSONArray.put(createNetworkResponseInfo(maxNetworkResponseInfo));
-        }
-        JsonUtils.putJsonArray(jSONObject, "networkResponses", jSONArray);
-        JsonUtils.putString(jSONObject, "latencyMillis", String.valueOf(maxAdWaterfallInfo.getLatencyMillis()));
-        return jSONObject;
-    }
-
-    private JSONObject createNetworkResponseInfo(MaxNetworkResponseInfo maxNetworkResponseInfo) {
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "adLoadState", Integer.toString(maxNetworkResponseInfo.getAdLoadState().ordinal()));
-        if (maxNetworkResponseInfo.getMediatedNetwork() != null) {
-            JSONObject jSONObject2 = new JSONObject();
-            JsonUtils.putString(jSONObject2, "name", maxNetworkResponseInfo.getMediatedNetwork().getName());
-            JsonUtils.putString(jSONObject2, "adapterClassName", maxNetworkResponseInfo.getMediatedNetwork().getAdapterClassName());
-            JsonUtils.putString(jSONObject2, "adapterVersion", maxNetworkResponseInfo.getMediatedNetwork().getAdapterVersion());
-            JsonUtils.putString(jSONObject2, "sdkVersion", maxNetworkResponseInfo.getMediatedNetwork().getSdkVersion());
-            JsonUtils.putJSONObject(jSONObject, "mediatedNetwork", jSONObject2);
-        }
-        JsonUtils.putJSONObject(jSONObject, "credentials", BundleUtils.toJSONObject(maxNetworkResponseInfo.getCredentials()));
-        MaxError error = maxNetworkResponseInfo.getError();
-        if (error != null) {
-            JSONObject jSONObject3 = new JSONObject();
-            JsonUtils.putString(jSONObject3, "errorMessage", error.getMessage());
-            JsonUtils.putString(jSONObject3, "adLoadFailureInfo", error.getAdLoadFailureInfo());
-            JsonUtils.putString(jSONObject3, IronSourceConstants.EVENTS_ERROR_CODE, Integer.toString(error.getCode()));
-            JsonUtils.putJSONObject(jSONObject, "error", jSONObject3);
-        }
-        JsonUtils.putString(jSONObject, "latencyMillis", String.valueOf(maxNetworkResponseInfo.getLatencyMillis()));
-        return jSONObject;
+        hashMap.put("placement", str);
+        hashMap.put("revenue", String.valueOf(maxAd.getRevenue()));
+        return hashMap;
     }
 
     public String getAdValue(String str, String str2) {
@@ -700,18 +561,17 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         synchronized (this.mAdInfoMapLock) {
             this.mAdInfoMap.remove(str);
         }
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "name", str2);
-        JsonUtils.putString(jSONObject, "adUnitId", str);
-        JsonUtils.putString(jSONObject, IronSourceConstants.EVENTS_ERROR_CODE, Integer.toString(maxError.getCode()));
-        JsonUtils.putString(jSONObject, "errorMessage", maxError.getMessage());
-        JsonUtils.putJSONObject(jSONObject, "waterfallInfo", createAdWaterfallInfo(maxError.getWaterfall()));
+        HashMap hashMap = new HashMap(3);
+        hashMap.put("name", str2);
+        hashMap.put("adUnitId", str);
+        hashMap.put(IronSourceConstants.EVENTS_ERROR_CODE, Integer.toString(maxError.getCode()));
+        hashMap.put("errorMessage", maxError.getMessage());
         String adLoadFailureInfo = maxError.getAdLoadFailureInfo();
         if (TextUtils.isEmpty(adLoadFailureInfo)) {
             adLoadFailureInfo = "";
         }
-        JsonUtils.putString(jSONObject, "adLoadFailureInfo", adLoadFailureInfo);
-        forwardUnityEvent(jSONObject);
+        hashMap.put("adLoadFailureInfo", adLoadFailureInfo);
+        forwardUnityEvent(hashMap);
     }
 
     @Override // com.applovin.mediation.MaxAdListener
@@ -764,10 +624,9 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         } else {
             str = MaxAdFormat.REWARDED == format ? "OnRewardedAdFailedToDisplayEvent" : "OnRewardedInterstitialAdFailedToDisplayEvent";
         }
-        JSONObject defaultAdEventParameters = getDefaultAdEventParameters(str, maxAd);
-        JsonUtils.putString(defaultAdEventParameters, IronSourceConstants.EVENTS_ERROR_CODE, Integer.toString(maxError.getCode()));
-        JsonUtils.putString(defaultAdEventParameters, "errorMessage", maxError.getMessage());
-        JsonUtils.putJSONObject(defaultAdEventParameters, "waterfallInfo", createAdWaterfallInfo(maxError.getWaterfall()));
+        Map<String, String> defaultAdEventParameters = getDefaultAdEventParameters(str, maxAd);
+        defaultAdEventParameters.put(IronSourceConstants.EVENTS_ERROR_CODE, Integer.toString(maxError.getCode()));
+        defaultAdEventParameters.put("errorMessage", maxError.getMessage());
         forwardUnityEvent(defaultAdEventParameters);
     }
 
@@ -827,9 +686,9 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         }
         String label = maxReward != null ? maxReward.getLabel() : "";
         String num = Integer.toString(maxReward != null ? maxReward.getAmount() : 0);
-        JSONObject defaultAdEventParameters = getDefaultAdEventParameters(format == MaxAdFormat.REWARDED ? "OnRewardedAdReceivedRewardEvent" : "OnRewardedInterstitialAdReceivedRewardEvent", maxAd);
-        JsonUtils.putString(defaultAdEventParameters, "rewardLabel", label);
-        JsonUtils.putString(defaultAdEventParameters, IronSourceConstants.EVENTS_REWARD_AMOUNT, num);
+        Map<String, String> defaultAdEventParameters = getDefaultAdEventParameters(format == MaxAdFormat.REWARDED ? "OnRewardedAdReceivedRewardEvent" : "OnRewardedInterstitialAdReceivedRewardEvent", maxAd);
+        defaultAdEventParameters.put("rewardLabel", label);
+        defaultAdEventParameters.put(IronSourceConstants.EVENTS_REWARD_AMOUNT, num);
         forwardUnityEvent(defaultAdEventParameters);
     }
 
@@ -853,12 +712,12 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         } else {
             str = "OnRewardedInterstitialAdRevenuePaidEvent";
         }
-        forwardUnityEvent(getDefaultAdEventParameters(str, maxAd), format.isFullscreenAd());
+        forwardUnityEvent(getDefaultAdEventParameters(str, maxAd));
     }
 
-    private JSONObject getDefaultAdEventParameters(String str, MaxAd maxAd) {
-        JSONObject adInfo = getAdInfo(maxAd);
-        JsonUtils.putString(adInfo, "name", str);
+    private Map<String, String> getDefaultAdEventParameters(String str, MaxAd maxAd) {
+        Map<String, String> adInfo = getAdInfo(maxAd);
+        adInfo.put("name", str);
         return adInfo;
     }
 
@@ -866,18 +725,55 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
 
     private void setAdViewPlacement(final String str, final MaxAdFormat maxAdFormat, final String str2) {
-    }
-
-    private void startAdViewAutoRefresh(final String str, final MaxAdFormat maxAdFormat) {
-    }
-
-    private void stopAdViewAutoRefresh(final String str, final MaxAdFormat maxAdFormat) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.5
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Setting placement \"" + str2 + "\" for " + maxAdFormat.getLabel() + " with ad unit id \"" + str + "\"");
+                MaxAdView retrieveAdView = MaxUnityAdManager.this.retrieveAdView(str, maxAdFormat);
+                if (retrieveAdView == null) {
+                    MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                    maxUnityAdManager2.e(maxAdFormat.getLabel() + " does not exist");
+                    return;
+                }
+                retrieveAdView.setPlacement(str2);
+            }
+        });
     }
 
     private void setAdViewWidth(final String str, final int i, final MaxAdFormat maxAdFormat) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.6
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Setting width " + i + " for \"" + maxAdFormat + "\" with ad unit identifier \"" + str + "\"");
+                int width = maxAdFormat.getSize().getWidth();
+                if (i < width) {
+                    MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                    maxUnityAdManager2.e("The provided width: " + i + "dp is smaller than the minimum required width: " + width + "dp for ad format: " + maxAdFormat + ". Please set the width higher than the minimum required.");
+                }
+                MaxUnityAdManager.this.mAdViewWidths.put(str, Integer.valueOf(i));
+                MaxUnityAdManager.this.positionAdView(str, maxAdFormat);
+            }
+        });
     }
 
     private void updateAdViewPosition(final String str, final String str2, final Point point, final MaxAdFormat maxAdFormat) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.7
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Updating " + maxAdFormat.getLabel() + " position to \"" + str2 + "\" for ad unit id \"" + str + "\"");
+                if (MaxUnityAdManager.this.retrieveAdView(str, maxAdFormat) != null) {
+                    MaxUnityAdManager.this.mAdViewPositions.put(str, str2);
+                    MaxUnityAdManager.this.mAdViewOffsets.put(str, point);
+                    MaxUnityAdManager.this.positionAdView(str, maxAdFormat);
+                    return;
+                }
+                MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                maxUnityAdManager2.e(maxAdFormat.getLabel() + " does not exist");
+            }
+        });
     }
 
     /* JADX INFO: Access modifiers changed from: private */
@@ -900,45 +796,124 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
         int pxToDp2 = AppLovinSdkUtils.pxToDp(getCurrentActivity(), iArr[1]);
         int pxToDp3 = AppLovinSdkUtils.pxToDp(getCurrentActivity(), retrieveAdView.getWidth());
         int pxToDp4 = AppLovinSdkUtils.pxToDp(getCurrentActivity(), retrieveAdView.getHeight());
-        JSONObject jSONObject = new JSONObject();
-        JsonUtils.putString(jSONObject, "origin_x", String.valueOf(pxToDp));
-        JsonUtils.putString(jSONObject, "origin_y", String.valueOf(pxToDp2));
-        JsonUtils.putString(jSONObject, "width", String.valueOf(pxToDp3));
-        JsonUtils.putString(jSONObject, "height", String.valueOf(pxToDp4));
-        return jSONObject.toString();
+        HashMap hashMap = new HashMap(4);
+        hashMap.put("origin_x", String.valueOf(pxToDp));
+        hashMap.put("origin_y", String.valueOf(pxToDp2));
+        hashMap.put("width", String.valueOf(pxToDp3));
+        hashMap.put("height", String.valueOf(pxToDp4));
+        return propsStrFromDictionary(hashMap);
     }
 
     private void destroyAdView(final String str, final MaxAdFormat maxAdFormat) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.10
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Destroying " + maxAdFormat.getLabel() + " with ad unit id \"" + str + "\"");
+                MaxAdView retrieveAdView = MaxUnityAdManager.this.retrieveAdView(str, maxAdFormat);
+                if (retrieveAdView == null) {
+                    MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                    maxUnityAdManager2.e(maxAdFormat.getLabel() + " does not exist");
+                    return;
+                }
+                ViewParent parent = retrieveAdView.getParent();
+                if (parent instanceof ViewGroup) {
+                    ((ViewGroup) parent).removeView(retrieveAdView);
+                }
+                retrieveAdView.setListener(null);
+                retrieveAdView.setRevenueListener(null);
+                retrieveAdView.destroy();
+                MaxUnityAdManager.this.mAdViews.remove(str);
+                MaxUnityAdManager.this.mAdViewAdFormats.remove(str);
+                MaxUnityAdManager.this.mAdViewPositions.remove(str);
+                MaxUnityAdManager.this.mAdViewOffsets.remove(str);
+                MaxUnityAdManager.this.mAdViewWidths.remove(str);
+                MaxUnityAdManager.this.mCrossPromoAdViewHeights.remove(str);
+                MaxUnityAdManager.this.mCrossPromoAdViewRotations.remove(str);
+                MaxUnityAdManager.this.mDisabledAdaptiveBannerAdUnitIds.remove(str);
+            }
+        });
     }
 
     private void setAdViewBackgroundColor(final String str, final MaxAdFormat maxAdFormat, final String str2) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.11
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Setting " + maxAdFormat.getLabel() + " with ad unit id \"" + str + "\" to color: " + str2);
+                MaxAdView retrieveAdView = MaxUnityAdManager.this.retrieveAdView(str, maxAdFormat);
+                if (retrieveAdView == null) {
+                    MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                    maxUnityAdManager2.e(maxAdFormat.getLabel() + " does not exist");
+                    return;
+                }
+                int parseColor = Color.parseColor(str2);
+                MaxUnityAdManager.this.mPublisherBannerBackgroundColor = Integer.valueOf(parseColor);
+                MaxUnityAdManager.this.mSafeAreaBackground.setBackgroundColor(parseColor);
+                retrieveAdView.setBackgroundColor(parseColor);
+            }
+        });
     }
 
-    private void setAdViewExtraParameter(final String str, final MaxAdFormat maxAdFormat, final String str2, final String str3) {
-    }
-
-    private void setAdViewLocalExtraParameter(final String str, final MaxAdFormat maxAdFormat, final String str2, final Object obj) {
+    private void setAdViewExtraParameters(final String str, final MaxAdFormat maxAdFormat, final String str2, final String str3) {
+        Utils.runSafelyOnUiThread(getCurrentActivity(), new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.12
+            @Override // java.lang.Runnable
+            public void run() {
+                MaxUnityAdManager maxUnityAdManager = MaxUnityAdManager.this;
+                maxUnityAdManager.d("Setting " + maxAdFormat.getLabel() + " extra with key: \"" + str2 + "\" value: " + str3);
+                MaxAdView retrieveAdView = MaxUnityAdManager.this.retrieveAdView(str, maxAdFormat);
+                if (retrieveAdView != null) {
+                    retrieveAdView.setExtraParameter(str2, str3);
+                } else {
+                    MaxUnityAdManager maxUnityAdManager2 = MaxUnityAdManager.this;
+                    maxUnityAdManager2.d(maxAdFormat.getLabel() + " does not exist for ad unit ID " + str + ". Saving extra parameter to be set when it is created.");
+                    Map map = (Map) MaxUnityAdManager.this.mAdViewExtraParametersToSetAfterCreate.get(str);
+                    if (map == null) {
+                        map = new HashMap(1);
+                        MaxUnityAdManager.this.mAdViewExtraParametersToSetAfterCreate.put(str, map);
+                    }
+                    map.put(str2, str3);
+                }
+                MaxUnityAdManager.this.maybeHandleExtraParameterChanges(str, maxAdFormat, str2, str3);
+            }
+        });
     }
 
     /* JADX INFO: Access modifiers changed from: private */
     public void maybeHandleExtraParameterChanges(String str, MaxAdFormat maxAdFormat, String str2, String str3) {
-    }
-
-    private void setAdViewCustomData(final String str, final MaxAdFormat maxAdFormat, final String str2) {
+        if (MaxAdFormat.MREC != maxAdFormat) {
+            if ("force_banner".equalsIgnoreCase(str2)) {
+                MaxAdFormat deviceSpecificAdViewAdFormat = Boolean.parseBoolean(str3) ? MaxAdFormat.BANNER : getDeviceSpecificAdViewAdFormat();
+                this.mAdViewAdFormats.put(str, deviceSpecificAdViewAdFormat);
+                positionAdView(str, deviceSpecificAdViewAdFormat);
+            } else if (!"adaptive_banner".equalsIgnoreCase(str2)) {
+            } else {
+                if (Boolean.parseBoolean(str3)) {
+                    this.mDisabledAdaptiveBannerAdUnitIds.remove(str);
+                } else {
+                    this.mDisabledAdaptiveBannerAdUnitIds.add(str);
+                }
+                positionAdView(str, maxAdFormat);
+            }
+        }
     }
 
     private void logInvalidAdFormat(MaxAdFormat maxAdFormat) {
+        logStackTrace(new IllegalStateException("invalid ad format: " + maxAdFormat));
     }
 
     private void logStackTrace(Exception exc) {
+        e(Log.getStackTraceString(exc));
     }
 
     /* JADX INFO: Access modifiers changed from: private */
-    public static void d(String str) {
+    public void d(String str) {
+        Log.d(SDK_TAG, "[MaxUnityAdManager] " + str);
     }
 
     /* JADX INFO: Access modifiers changed from: private */
-    public static void e(String str) {
+    public void e(String str) {
+        Log.e(SDK_TAG, "[MaxUnityAdManager] " + str);
     }
 
     private MaxInterstitialAd retrieveInterstitial(String str) {
@@ -998,6 +973,7 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
 
     private void positionAdView(MaxAd maxAd) {
+        positionAdView(maxAd.getAdUnitId(), maxAd.getFormat());
     }
 
     /* JADX INFO: Access modifiers changed from: private */
@@ -1021,32 +997,37 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
     }
 
     /* JADX INFO: Access modifiers changed from: private */
-    public static void forwardUnityEvent(JSONObject jSONObject) {
-        forwardUnityEvent(jSONObject, false);
-    }
-
-    private static void forwardUnityEvent(final JSONObject jSONObject, final boolean z) {
-        sThreadPoolExecutor.execute(new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.18
+    public static void forwardUnityEvent(final Map<String, String> map) {
+        sThreadPoolExecutor.execute(new Runnable() { // from class: com.applovin.mediation.unity.MaxUnityAdManager.14
             @Override // java.lang.Runnable
             public void run() {
-                String jSONObject2 = jSONObject.toString();
-                if (z) {
-                    MaxUnityAdManager.backgroundCallback.onEvent(jSONObject2);
-                } else {
-                    UnityPlayer.UnitySendMessage("MaxSdkCallbacks", "ForwardEvent", jSONObject2);
-                }
+                UnityPlayer.UnitySendMessage("MaxSdkCallbacks", "ForwardEvent", MaxUnityAdManager.propsStrFromDictionary(map));
             }
         });
     }
 
+    public static String propsStrFromDictionary(Map<String, String> map) {
+        StringBuilder sb = new StringBuilder(64);
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            sb.append(entry.getKey());
+            sb.append("=");
+            sb.append(entry.getValue());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     private static Map<String, String> deserializeParameters(String str) {
         if (!TextUtils.isEmpty(str)) {
-            try {
-                return JsonUtils.toStringMap(JsonUtils.jsonObjectFromJsonString(str, new JSONObject()));
-            } catch (Throwable th) {
-                e("Failed to deserialize: (" + str + ") with exception: " + th);
-                return Collections.emptyMap();
+            String[] split = str.split(SERIALIZED_KEY_VALUE_PAIR_SEPARATOR);
+            HashMap hashMap = new HashMap(split.length);
+            for (String str2 : split) {
+                String[] split2 = str2.split(SERIALIZED_KEY_VALUE_SEPARATOR);
+                if (split2.length == 2) {
+                    hashMap.put(split2[0], split2[1]);
+                }
             }
+            return hashMap;
         }
         return Collections.emptyMap();
     }

@@ -81,22 +81,49 @@ const char *coverIl2cppString2Char(void *str) {
 void *arg2;
 const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(arg2));
 
+//bool HookedBehaviour_get_isActiveAndEnabled(Behaviour *klass) {
+//    bool  b = Behaviour_get_isActiveAndEnabled(klass, NULL);
+//    if(!b){
+//        return b;
+//    }
+//    GameObject *gameObject = Component_get_gameObject(reinterpret_cast<Component *>(klass), NULL);
+//    if(gameObject==nullptr){
+//        return b;
+//    }
+//    String *name = Object_1_get_name(reinterpret_cast<Object_1 *>(gameObject), NULL);
+//
+//    if(name== nullptr){
+//        return b;
+//    }
+//    const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
+//
+//    LOGI("GameObject Mame: %s",s);
+//    if(strcmp(s,"Share")==0){
+//
+//    }
+//    return b;
+//}
 
+//fakeCpp((void *) Behaviour_get_isActiveAndEnabled, (void *)HookedBehaviour_get_isActiveAndEnabled ,reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
 
-void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, MethodInfo * method){
-    GameObject* gameobject = eventData->m_PointerPress;
-    if (gameobject != nullptr){
-        String * name = Object_1_get_name(reinterpret_cast<Object_1 *>(gameobject), nullptr);
-        if (name != nullptr){
-            const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
-            LOGE("click %s", s);
-            if (strcmp(s, "PurchaseButton") == 0){
-                showRewardedAd();
-            }
-        }
-    }
-    Button_OnPointerClick( __this,  eventData,  method);
-}
+//    fakeCpp((void *) Button_OnPointerClick,
+//            (void *) HookedButton_OnPointerClick,
+//            reinterpret_cast<void **>(&Button_OnPointerClick));
+
+//void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, MethodInfo * method){
+//    GameObject* gameobject = eventData->m_PointerPress;
+//    if (gameobject != nullptr){
+//        String * name = Object_1_get_name(reinterpret_cast<Object_1 *>(gameobject), nullptr);
+//        if (name != nullptr){
+//            const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
+//            LOGE("click %s", s);
+//            if (strcmp(s, "PurchaseButton") == 0){
+//                showRewardedAd();
+//            }
+//        }
+//    }
+//    Button_OnPointerClick( __this,  eventData,  method);
+//}
 
 
 
@@ -205,7 +232,9 @@ static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.s
         while(fgets(cmdline, 256, fp)) //逐行读取
         {
 //            LOGD("cmdline = %s",cmdline);
-            if(strstr(cmdline, soName) && strstr(cmdline, "r-xp"))//筛选
+//            if(strstr(cmdline, soName) && strstr(cmdline, "r-xp"))//筛选
+             if (strstr(cmdline, soName) && strstr(cmdline, "r--p"))//筛选
+
 //            if(strstr(cmdline, soName) )//筛选
             {
                 char *str = strstr(cmdline,"-");
