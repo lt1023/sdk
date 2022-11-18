@@ -217,6 +217,11 @@ unsigned long baseAddr ;
 //#include <chrono>
 #include <thread>
 
+
+__attribute__ ((visibility("hidden")))
+void HookedApplication_OpenURL(){}
+
+
 __attribute__ ((visibility("hidden")))
 void find_base_addr(){
     while(!baseAddr){
