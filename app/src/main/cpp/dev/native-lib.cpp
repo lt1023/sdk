@@ -27,6 +27,7 @@ JavaVM *global_jvm;
 #include <unistd.h>
 
 
+const char* fuckname = "libil2cpp.so";
 
 
 
@@ -220,7 +221,7 @@ __attribute__ ((visibility("hidden")))
 void find_base_addr(){
     while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));
-        baseAddr = find_database_of("libil2cpp.so");
+        baseAddr = find_database_of(fuckname);
 //        baseAddr = baseImageAddr("libil2cpp.so");
     }
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
