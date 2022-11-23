@@ -7,7 +7,6 @@
 #include <fstream>
 #include <sstream>
 #include "include/faker.h"
-#include "MonoString.h"
 #include <thread>
 
 #ifdef DCIRDLL_EXPORTS

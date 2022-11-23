@@ -4,13 +4,6 @@
 #include "include/faker.h"
 #include "MonoString.h"
 
-const char *coverIl2cppString2Char(void *str) {
-    auto *monoString = reinterpret_cast<MonoString *>(str);
-    u16string ss((char16_t *) monoString->getChars(), 0, monoString->getLength());
-    const char *s = utf16le_to_utf8(ss).c_str();
-    return s;
-}
-
 
 
 //void HookedOnPointerClick(void *arg1, void *arg2) {
@@ -110,4 +103,52 @@ void init_isActiveAndEnabled(long addr_get_isActiveAndEnabled, long addr_gameobj
 
 
 void (*Text_set_text)(void* obj, void*value) = nullptr;
+void (*Text_OnEnable)(void* obj) = nullptr;
+void* (*Text_get_text)(void* obj) = nullptr;
 void* (*il2cpp_string_new)(const char *value) = nullptr;
+
+
+
+void init_Text(long add_Text_set_text,long add_Text_get_text,long add_Text_OnEnable,long add_il2cpp_string_new, void* praseText, void* OnEnable){
+    Text_set_text = reinterpret_cast<void (*)(void *, void *)>(add_Text_set_text);
+    Text_get_text = reinterpret_cast<void *(*)(void *)>(add_Text_get_text);
+    Text_OnEnable = reinterpret_cast<void (*)(void *)>(add_Text_OnEnable);
+    il2cpp_string_new = reinterpret_cast<void *(*)(const char *)>(add_il2cpp_string_new);
+
+//    praseText = src_praseText;
+    fakeCpp((void *) add_Text_set_text,
+            (void *) praseText,
+            reinterpret_cast<void **>(&Text_set_text));
+    fakeCpp((void *) add_Text_OnEnable,
+            (void *)OnEnable,
+            reinterpret_cast<void **>(&Text_OnEnable));
+}
+
+//long add_il2cpp_string_new = baseAddr + 0x00106470;
+//long add_Text_set_text = baseAddr+0x53E2CC;
+//long add_Text_get_text = baseAddr+0x53E2C4;
+//long add_Text_OnEnable = baseAddr+0x53EBC4;
+//init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,add_il2cpp_string_new,(void* )praseText,(void* )AText_OnEnable);
+
+
+//__attribute__ ((visibility("hidden")))
+//void praseText(void* obj, void*value){
+//
+//    if (value){
+//        const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(value));
+//        if (s){
+//            LOGE("praseText %s", s);
+//            if (strcmp(s, "MUSKETS OF AMERICA")==0){
+//                value = il2cpp_string_new("");
+//            }
+//            Text_set_text(obj, value);
+//        }
+//    }
+//
+//}
+//
+//__attribute__ ((visibility("hidden")))
+//void AText_OnEnable(void* obj){
+//    Text_OnEnable(obj);
+//    praseText(obj, Text_get_text(obj));
+//}
