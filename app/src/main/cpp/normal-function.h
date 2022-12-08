@@ -6,6 +6,7 @@
 
 
 
+__attribute__ ((visibility("hidden")))
 //void HookedOnPointerClick(void *arg1, void *arg2) {
 //    void *gameobject = get_pointerClick(arg2);
 //    if (gameobject != nullptr) {
@@ -59,7 +60,7 @@ void (*gameobject_SetActive)(void *obj, bool value) = nullptr;
 //long addOnPointerClick = baseAddr + 0x68BEA0;
 //long addget_pointerClick = baseAddr + 0x6846D0;
 //long addr_object_get_name = baseAddr + 0xC8600C;
-//init_OnPointerClick(addOnPointerClick, addget_pointerClick, addr_object_get_name, (void*) AOnPointerClick);
+//init_OnPointerClick(addOnPointerClick, addget_pointerClick, addr_object_get_name, (void*) HookedOnPointerClick);
 
 
 bool isActiveAndEnabled(void *obj) {
@@ -99,6 +100,22 @@ void init_isActiveAndEnabled(long addr_get_isActiveAndEnabled, long addr_gameobj
 //long addr_get_isActiveAndEnabled = baseAddr + 0xC576E4;
 //init_isActiveAndEnabled(addr_get_isActiveAndEnabled, addr_gameobject_SetActive, addr_object_get_name, addr_get_gameObject, (void*)isActiveAndEnabled);
 
+
+
+
+
+/**
+ * 替换字符串中字符
+ * @param ori_text
+ * @param rep_text
+ * @param result_text
+ * @return
+ */
+const char* replace_text(const char* ori_text, const char* rep_text , const char* result_text ){
+    string ori_str(ori_text);
+    string rep_str(rep_text);
+    return ori_str.replace(ori_str.find(rep_text), rep_str.length(), result_text).c_str();
+}
 
 
 

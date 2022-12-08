@@ -321,6 +321,7 @@ public final class SDK {
      */
     public static void showFullScreenVideo(IOnShowResult result) {
         Logger.log("MetaAdApi showFullScreenVideo ");
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -370,15 +371,17 @@ public final class SDK {
      */
     public static void showFullScreenVideo() {
         Logger.log("MetaAdApi showFullScreenVideo ");
+        mHandler.removeCallbacksAndMessages(null);
+
         showFullScreenVideo(new IOnShowResult() {
             @Override
             public void OnSuccess() {
-
+                startAutoPlay();
             }
 
             @Override
             public void OnFailed() {
-
+                startAutoPlay();
             }
         });
     }

@@ -2,65 +2,163 @@ package com.anygames.sdk;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 
 public final class Tools {
-    public static interface OnInitListener{
+    public static interface OnInitListener {
         void onSuccess();
+
         void onFailed();
     }
-    public static void init(Context context,OnInitListener listener){
+
+    public static void init(Context context, OnInitListener listener) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-//                    ProgressBar progressBar = new ProgressBar(context);
+//                    copyObb(context, listener);
+                    copyAssets(context, "level", listener);
+                } catch (Exception e) {
+                    Logger.log("copyAssets Failed !" + e.getMessage());
+                    listener.onFailed();
+                    Log.e("xNative", "run: ",e);
+                }
+            }
+        }).start();
+    }
+
+
+    private static void copyObb(Context context,OnInitListener listener) throws IOException {
+        //                    ProgressBar progressBar = new ProgressBar(context);
 //                    progressBar.
 //                    CopyProgressDialog dialog;
-                    //main.973011.com.coffeestainstudios.goatsimulator.mmo.obb
-                    String oriName = "libqihoo.so";
-                    String realName = "main.973011.com.coffeestainstudios.goatsimulator.mmo.dbzq.m.obb";
-                    String targetPath = context.getObbDir().getAbsolutePath() + "/" + realName;
+        //main.973011.com.coffeestainstudios.goatsimulator.mmo.obb
+        String oriName = "libqihoo.so";
+        String realName = "main.973011.com.coffeestainstudios.goatsimulator.mmo.dbzq.m.obb";
+        String targetPath = context.getObbDir().getAbsolutePath() + "/" + realName;
 //            File file = new File(targetPath);
 //            if (file.exists()){
 //                listener.onSuccess();
 //                return;
 //            }
-                    AssetManager assets = context.getAssets();
-                    InputStream open = assets.open(oriName);
-                    FileOutputStream fos = new FileOutputStream(targetPath);
-                    byte[] buffer = new byte[1024];
-                    int count;
-                    while ((count = open.read(buffer)) != -1){
-                        fos.write(buffer,0,count);
-                    }
-                    fos.close();
-                    open.close();
-                    listener.onSuccess();
-                }catch (Exception e){
-                    Logger.log("copyAssets Failed !" +e.getMessage());
-                    listener.onFailed();
-                }
+        AssetManager assets = context.getAssets();
+        InputStream open = assets.open(oriName);
+        FileOutputStream fos = new FileOutputStream(targetPath);
+        byte[] buffer = new byte[1024];
+        int count;
+        while ((count = open.read(buffer)) != -1){
+            fos.write(buffer,0,count);
+        }
+        fos.close();
+        open.close();
+        listener.onSuccess();
+    }
+
+    private static void copyAssets(Context context, String path, OnInitListener listener) throws IOException {
+        targetPath = context.getExternalFilesDir(null).getAbsolutePath() + "/CustomLevels";
+//        targetPath = "/sdcard/Android/data/" + context.getPackageName() + "/files/CustomLevels";
+//        targetPath = "/sdcard/Android/data/" + context.getPackageName() + "/files/CustomLevels";
+        File targetFile = new File(targetPath);
+//        Log.e("xNaive", "targetPath: "+targetPath + "   targetFile.exists()=" + targetFile.exists());
+
+        if (!targetFile.exists()) {
+            targetFile.mkdirs();
+        }
+
+        copyAssets(context, path);
+        listener.onSuccess();
+    }
+
+
+    private static String targetPath;
+
+    private static void copyAssets(Context mContext, String path) throws IOException {
+
+        AssetManager assetManager = mContext.getAssets();
+
+        String assets[] = null;
+
+
+        assets = assetManager.list(path);
+
+//复制单个文件
+//        Log.e("xNaive", "assets.length: "+assets.length + " path = " +path );
+
+        if (assets.length == 0) {
+
+            copyFile(mContext, path, targetPath);
+
+        }
+
+//复制文件夹中的文件到另一个目录中
+
+        else {
+
+            for (int i = 0; i < assets.length; ++i) {
+
+                Log.e("Path", path + "/" + assets[i]);
+
+                copyAssets(mContext, path + "/" + assets[i]);
+
             }
-        }).start();
+
+        }
 
     }
 
-    private void copyAssets(Context context, String oriName, String targetPath){
+    private static void copyFile(Context mContext, String filename, String targetPath) throws IOException {
+
+        AssetManager assetManager = mContext.getAssets();
+
+        InputStream in = null;
+
+        OutputStream out = null;
+
+        in = assetManager.open(filename);
+
+
+        filename = filename.replaceAll("level", "");
+//        Log.e("xNaive = ", filename);
+
+        String newFileName = targetPath + "/" + filename;
+
+//        Log.e("xNaive", newFileName);
+
+        out = new FileOutputStream(newFileName);
+
+        byte[] buffer = new byte[1024];
+
+        int read;
+
+        while ((read = in.read(buffer)) != -1) {
+
+            out.write(buffer, 0, read);
+
+        }
+
+        in.close();
+
+        in = null;
+
+        out.flush();
+
+        out.close();
+
+        out = null;
 
     }
 
-
-    public static String request(String gameKey){
-        if (TextUtils.isEmpty(gameKey))return null;
+    public static String request(String gameKey) {
         StringBuffer buffer = new StringBuffer();
         try {
             // 封装了URL对象
@@ -107,7 +205,6 @@ public final class Tools {
 
     /**
      * * 删除方法 这里只会删除某个文件夹下的文件，如果传入的directory是个文件，将不做处理 * *
-     *
      */
     private static boolean deleteFilesByDirectory(File dir) {
 

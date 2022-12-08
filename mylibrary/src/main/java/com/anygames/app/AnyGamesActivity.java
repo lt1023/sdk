@@ -85,7 +85,9 @@ public final class AnyGamesActivity extends Activity{
         mSharedPreferences = getSharedPreferences("config", MODE_PRIVATE);
         boolean isFirst = mSharedPreferences.getBoolean("isFirst", true);
         if (isFirst){
-            Toast.makeText(AnyGamesActivity.this, "首次启动游戏加载时间可能过长，请耐心等候", Toast.LENGTH_LONG).show();
+//            Toast.makeText(AnyGamesActivity.this, "首次启动游戏加载时间可能过长，请耐心等候", Toast.LENGTH_LONG).show();
+//            Log.e("xNative", "startGame: " + targetPath);
+
             Tools.init(this, new Tools.OnInitListener() {
                 @Override
                 public void onSuccess() {
@@ -95,15 +97,20 @@ public final class AnyGamesActivity extends Activity{
 
                 @Override
                 public void onFailed() {
-                    new AlertDialog.Builder(AnyGamesActivity.this)
-                            .setTitle("初始化失败")
-                            .setMessage("为了游戏正常运行，请到手机设置中打开应用存储权限")
-                            .setNegativeButton("ok", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    Process.killProcess(Process.myPid());
-                                }
-                            }).create().show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            new AlertDialog.Builder(AnyGamesActivity.this)
+                                    .setTitle("初始化失败")
+                                    .setMessage("为了游戏正常运行，请到手机设置中打开应用存储权限")
+                                    .setNegativeButton("ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            Process.killProcess(Process.myPid());
+                                        }
+                                    }).create().show();
+                        }
+                    });
 //                    Toast.makeText(AnyGamesActivity.this, "初始化失败", Toast.LENGTH_LONG).show();
                 }
             });

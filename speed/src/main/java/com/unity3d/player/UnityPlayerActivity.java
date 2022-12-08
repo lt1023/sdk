@@ -118,7 +118,7 @@ public class UnityPlayerActivity extends Activity implements IUnityPlayerLifecyc
 //        view.setLayoutParams(params);
 //        view.addView(imageView);
         params.gravity = Gravity.CENTER_VERTICAL;
-        View inflate = LayoutInflater.from(this).inflate(com.happynicegames.idlesorting.R.layout.layout_speed, null);
+        View inflate = LayoutInflater.from(this).inflate(R.layout.layout_speed, null);
         addContentView(inflate, params);
         View speed2 = findViewById(R.id.speed2);
         TextView speed_time_tv = findViewById(R.id.speed_time_tv);
