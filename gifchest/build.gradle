@@ -36,4 +36,18 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+
+
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.25'
+
+
+//            <pl.droidsonroids.gif.GifImageView
+//    android:src="@drawable/loading"
+//    android:id="@+id/loading_view"
+//    android:layout_centerInParent="true"
+//    android:layout_width="wrap_content"
+//    android:layout_height="wrap_content"/>
+
+
 }
