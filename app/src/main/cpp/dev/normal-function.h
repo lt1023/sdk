@@ -2,7 +2,7 @@
 // Created by ZERO on 2022/10/18.
 //
 #include "include/faker.h"
-#include "../MonoString.h"
+#include "./MonoString.h"
 
 
 
@@ -144,7 +144,7 @@ void init_Text(long add_Text_set_text,long add_Text_get_text,long add_Text_OnEna
 //long add_il2cpp_string_new = baseAddr + 0x00106470;
 //long add_Text_set_text = baseAddr+0x53E2CC;
 //long add_Text_get_text = baseAddr+0x53E2C4;
-//long add_Text_OnEnable = baseAddr+0x53EBC4;
+//long add_Text_OnEnable = baseAddr+0x53EBC4;//ParseInputText
 //init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,add_il2cpp_string_new,(void* )praseText,(void* )AText_OnEnable);
 
 

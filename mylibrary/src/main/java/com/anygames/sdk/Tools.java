@@ -13,26 +13,58 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public final class Tools {
+    private static final int mLoopDelayTime = 1000;
     public static interface OnInitListener {
         void onSuccess();
 
         void onFailed();
     }
 
+    private static Timer mTimer = null;
     public static void init(Context context, OnInitListener listener) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-//                    copyObb(context, listener);
-                    copyAssets(context, "level", listener);
-                } catch (Exception e) {
-                    Logger.log("copyAssets Failed !" + e.getMessage());
-                    listener.onFailed();
-                    Log.e("xNative", "run: ",e);
-                }
+                mTimer = new Timer();
+                mTimer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            String targetPath = context.getFilesDir() + "/CharacterSkins";
+                            File targetFile = new File(targetPath);
+//                            Log.e("xNaive", "targetPath: "+targetPath + "   targetFile.exists()=" + targetFile.exists());
+                            String targetWorldsPath = context.getFilesDir()+"/";
+                            File targetWorldsFile = new File(targetWorldsPath);
+                            if (targetFile.exists()&&targetWorldsFile.exists()){
+                                copyAssets(context, "Survivalcraft", targetPath, false,new OnInitListener() {
+                                    @Override
+                                    public void onSuccess() {
+                                        try {
+                                            copyAssets(context, "Worlds", targetWorldsPath,true,listener);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailed() {
+
+                                    }
+                                });
+                                cancel();
+                                mTimer.cancel();
+                            }
+                        } catch (Exception e) {
+                            Logger.log("copyAssets Failed !" + e.getMessage());
+                            listener.onFailed();
+//                            Log.e("xNative", "run: ",e);
+                        }
+                    }
+                },mLoopDelayTime, mLoopDelayTime);
             }
         }).start();
     }
@@ -64,25 +96,57 @@ public final class Tools {
         listener.onSuccess();
     }
 
-    private static void copyAssets(Context context, String path, OnInitListener listener) throws IOException {
-        targetPath = context.getExternalFilesDir(null).getAbsolutePath() + "/CustomLevels";
-//        targetPath = "/sdcard/Android/data/" + context.getPackageName() + "/files/CustomLevels";
-//        targetPath = "/sdcard/Android/data/" + context.getPackageName() + "/files/CustomLevels";
+    private static void copyAssets(Context context, String path,  String targetPath, boolean isCopyPath ,OnInitListener listener) throws IOException {
         File targetFile = new File(targetPath);
-//        Log.e("xNaive", "targetPath: "+targetPath + "   targetFile.exists()=" + targetFile.exists());
-
         if (!targetFile.exists()) {
             targetFile.mkdirs();
         }
-
-        copyAssets(context, path);
+        if (isCopyPath){
+            copyAssetswithPath(context, path,targetPath);
+        }else {
+            copyAssetswithoutPath(context, path,targetPath);
+        }
         listener.onSuccess();
     }
 
 
-    private static String targetPath;
+//    private static String targetPath;
 
-    private static void copyAssets(Context mContext, String path) throws IOException {
+    private static void copyAssetswithPath(Context mContext, String path, String targetPath) throws IOException {
+
+        AssetManager assetManager = mContext.getAssets();
+
+        String assets[] = null;
+
+
+        assets = assetManager.list(path);
+
+//复制单个文件
+//        Log.e("xNaive", "assets.length: "+assets.length + " path = " +path );
+
+        if (assets.length == 0) {
+            copyFile(mContext, path, targetPath,true);
+        }
+
+//复制文件夹中的文件到另一个目录中
+
+        else {
+            String newFileName = targetPath + "/" + path;
+//            Log.e("xNative", "newFileName: "+newFileName );
+            File fileDir = new File(newFileName);
+            if (!fileDir.exists()){
+                fileDir.mkdirs();
+            }
+            for (int i = 0; i < assets.length; ++i) {
+                String fileDirs = path + "/" + assets[i];
+//                Log.e("Path", fileDirs);
+                copyAssetswithPath(mContext, path + "/" + assets[i],targetPath);
+            }
+
+        }
+
+    }
+    private static void copyAssetswithoutPath(Context mContext, String path, String targetPath) throws IOException {
 
         AssetManager assetManager = mContext.getAssets();
 
@@ -96,7 +160,7 @@ public final class Tools {
 
         if (assets.length == 0) {
 
-            copyFile(mContext, path, targetPath);
+            copyFile(mContext, path, targetPath,false);
 
         }
 
@@ -106,9 +170,9 @@ public final class Tools {
 
             for (int i = 0; i < assets.length; ++i) {
 
-                Log.e("Path", path + "/" + assets[i]);
-
-                copyAssets(mContext, path + "/" + assets[i]);
+                String fileDirs = path + "/" + assets[i];
+//                Log.e("Path", fileDirs);
+                copyAssetswithoutPath(mContext, fileDirs,targetPath);
 
             }
 
@@ -116,7 +180,7 @@ public final class Tools {
 
     }
 
-    private static void copyFile(Context mContext, String filename, String targetPath) throws IOException {
+    private static void copyFile(Context mContext, String filename, String targetPath,boolean isCopyPath ) throws IOException {
 
         AssetManager assetManager = mContext.getAssets();
 
@@ -127,12 +191,22 @@ public final class Tools {
         in = assetManager.open(filename);
 
 
-        filename = filename.replaceAll("level", "");
+        if (!isCopyPath){
+            String[] strings = filename.split("/");
+            filename = strings[strings.length - 1];
+        }
+//        filename = filename.replaceAll("Survivalcraft", "");
 //        Log.e("xNaive = ", filename);
 
         String newFileName = targetPath + "/" + filename;
 
+        File newFile = new File(newFileName);
+//        Log.e("xNaive", "newFile.exists() = "+newFile.exists());
+
+        if (newFile.exists())return;
 //        Log.e("xNaive", newFileName);
+
+
 
         out = new FileOutputStream(newFileName);
 
