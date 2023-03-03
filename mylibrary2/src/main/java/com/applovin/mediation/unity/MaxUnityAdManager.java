@@ -200,13 +200,13 @@ public class MaxUnityAdManager implements MaxAdListener, MaxAdViewAdListener, Ma
 
             @Override
             public String getCountryCode() {
-                return "CN";
+                return "EN";
             }
         });
         JSONObject jSONObject = new JSONObject();
         JsonUtils.putString(jSONObject, "name", "OnSdkInitializedEvent");
         JsonUtils.putString(jSONObject, "consentDialogState", "2");
-        JsonUtils.putString(jSONObject, "countryCode", "CN");
+        JsonUtils.putString(jSONObject, "countryCode", "EN");
         JsonUtils.putString(jSONObject, "isSuccessfullyInitialized", "true");
         MaxUnityAdManager.forwardUnityEvent(jSONObject);
         return this.sdk;

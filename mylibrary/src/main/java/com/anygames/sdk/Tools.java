@@ -1,8 +1,19 @@
 package com.anygames.sdk;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
+import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+
+import com.anygames.app.GameActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -10,9 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,25 +47,21 @@ public final class Tools {
                     @Override
                     public void run() {
                         try {
-                            String targetPath = context.getFilesDir() + "/CharacterSkins";
+                            String targetPath = context.getExternalFilesDir("") + "/";
                             File targetFile = new File(targetPath);
 //                            Log.e("xNaive", "targetPath: "+targetPath + "   targetFile.exists()=" + targetFile.exists());
-                            String targetWorldsPath = context.getFilesDir()+"/";
-                            File targetWorldsFile = new File(targetWorldsPath);
-                            if (targetFile.exists()&&targetWorldsFile.exists()){
-                                copyAssets(context, "Survivalcraft", targetPath, false,new OnInitListener() {
+//                            String targetWorldsPath = context.getFilesDir()+"/";
+//                            File targetWorldsFile = new File(targetWorldsPath);
+                            if (targetFile.exists()){
+                                copyAssets(context, "files", targetPath, false,new OnInitListener() {
                                     @Override
                                     public void onSuccess() {
-                                        try {
-                                            copyAssets(context, "Worlds", targetWorldsPath,true,listener);
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
+                                        listener.onSuccess();
                                     }
 
                                     @Override
                                     public void onFailed() {
-
+                                        listener.onFailed();
                                     }
                                 });
                                 cancel();
@@ -69,6 +78,13 @@ public final class Tools {
         }).start();
     }
 
+
+    public static int getScreenWidth(Activity context){
+        return context.getWindowManager().getDefaultDisplay().getWidth();
+    }
+    public static int getScreenHeight(Activity context){
+        return context.getWindowManager().getDefaultDisplay().getHeight();
+    }
 
     private static void copyObb(Context context,OnInitListener listener) throws IOException {
         //                    ProgressBar progressBar = new ProgressBar(context);
@@ -203,7 +219,9 @@ public final class Tools {
         File newFile = new File(newFileName);
 //        Log.e("xNaive", "newFile.exists() = "+newFile.exists());
 
-        if (newFile.exists())return;
+        if (newFile.exists()){
+            newFile.delete();
+        }
 //        Log.e("xNaive", newFileName);
 
 
@@ -299,5 +317,97 @@ public final class Tools {
         }
         assert dir != null;
         return dir.delete();
+    }
+
+
+    public static String queryVipInfo(String uid) {
+        if (TextUtils.isEmpty(uid)) return null;
+        StringBuffer buffer = new StringBuffer();
+        try {
+            String online_path = "https://api.233lyly.com/member/v2/af2f5a/a41f3e6?fb3f5cabad=%s";
+//            String url_path = String.format("https://pre-api.233lyly.com/member/v2/af2f5a/a41f3e6?fb3f5cabad=%s", uid);
+            String url_path = String.format(online_path, uid);
+            // 封装了URL对象
+            URL url = new URL(url_path);
+            // 获取http连接对象
+//            Log.e("anygames", url.toString() );
+            HttpURLConnection conn = (HttpURLConnection) url
+                    .openConnection();
+            conn.setRequestMethod("GET");
+            // 设置连接超时的时间（单位：毫秒）
+            conn.setConnectTimeout(15000);
+            //设置读取数据的超时时间
+            conn.setReadTimeout(5000);
+            try {
+                conn.connect();
+            } catch (SocketTimeoutException e) {
+                return "";
+            }
+            // 获取状态码
+            int code = conn.getResponseCode();
+            if (code == 200) {// 请求成功
+                // 获取响应消息的实体内容
+                InputStreamReader reader = new InputStreamReader(
+                        conn.getInputStream());
+                char[] charArr = new char[1024 * 8];
+                int len = 0;
+                while ((len = reader.read(charArr)) != -1) {
+                    // 字符数组转字符串
+                    String str = new String(charArr, 0, len);
+                    // 在结尾追加字符串
+                    buffer.append(str);
+                }
+            }
+        } catch (Exception e) {
+//            e.printStackTrace();
+        }
+        return buffer.toString();
+    }
+
+
+    private static void startScheme(Context context) throws UnsupportedEncodingException {
+        String url = "https://app-v6.233leyuan.com/diamondmember.html?source=mod&gameid=857512";
+        String encode = URLEncoder.encode(url, "utf-8");
+        String uri = String.format("metaapp://233xyx/web/web?key_game_pkg=%s&url=%s", context.getPackageName(), encode);
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+
+    public static void showVipDialog() {
+        Activity activity = GameActivity.getActivity();
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                int screenWidth = Tools.getScreenWidth(activity);
+                int screenHeight = Tools.getScreenHeight(activity);
+                View view = LayoutInflater.from(activity).inflate(R.layout.layout_vip, null);
+                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(screenWidth/2, ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.gravity = Gravity.CENTER;
+                activity.addContentView(view,params );
+                view.setOnClickListener(v -> view.setVisibility(View.GONE));
+                view.findViewById(R.id.start_open_vip).setOnClickListener(v -> {
+                    view.setVisibility(View.GONE);
+                    jumpToCharge();
+                });
+                view.findViewById(R.id.close_vip_tips).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        view.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+    }
+
+    public static void jumpToCharge(){
+        try {
+            Activity activity = GameActivity.getActivity();
+            Context context = activity.getApplicationContext();
+            startScheme(context);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
     }
 }

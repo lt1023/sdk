@@ -5,3 +5,5 @@ include ':mylibrary2'
 include ':mylibrary'
 include ':app'
 rootProject.name = "MetaSDK"
+include ':analytics'
+include ':templib'
