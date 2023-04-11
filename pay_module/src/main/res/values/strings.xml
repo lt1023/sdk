@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="string_vip_tips">成为233乐园会员即可拥有无限创建世界、激活模组、跳过广告等特权</string>
+    <string name="string_vip_tips_close">关闭</string>
+    <string name="string_vip_tips_jump">前往了解</string>
+    <string name="string_restart_app_restart">立即重启</string>
+    <string name="string_restart_app_close">暂时不用</string>
+</resources>
