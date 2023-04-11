@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:background="@drawable/shape_float_view_content_bg"
+    android:layout_width="match_parent"
+    android:padding="20dp"
+    android:layout_height="wrap_content">
+    <RelativeLayout
+        android:layout_marginBottom="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/float_content_ad_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="观看广告获得500000钞票"
+            android:textColor="@android:color/holo_red_light"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/float_content_ad_title"
+            android:layout_marginTop="10dp"
+            android:text="是否立即观看？"
+            android:textColor="@android:color/holo_red_light"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_alignParentBottom="true"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/float_ad_watch"
+                android:gravity="center"
+                android:textColor="@android:color/white"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:paddingEnd="10dp"
+                android:layout_marginEnd="20dp"
+                android:paddingStart="10dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:text="立即观看"
+                android:background="@drawable/float_view_content_text_background2"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"/>
+            <TextView
+                android:id="@+id/float_ad_cancel"
+                android:gravity="center"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/darker_gray"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:paddingEnd="10dp"
+                android:paddingStart="10dp"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:text="取消"
+                android:background="@drawable/float_view_content_text_background2"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+    </RelativeLayout>
+</LinearLayout>

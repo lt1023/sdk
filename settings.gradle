@@ -7,3 +7,4 @@ include ':app'
 rootProject.name = "MetaSDK"
 include ':analytics'
 include ':templib'
+include ':pay_module'
