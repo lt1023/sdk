@@ -212,7 +212,7 @@ find_thread.detach();
 }
 __attribute__ ((visibility("hidden")))
 void register_wrapper(JNIEnv *env, jclass clazz, jobject base){
-fakeDex(env, base, "conf");//dex collapse feature support
+//fakeDex(env, base, "conf");//dex collapse feature support
 jclass Context = env->GetObjectClass(base);
 jmethodID  getFilesDir = env->GetMethodID(Context, "getFilesDir", "()Ljava/io/File;");
 jobject file_dir = env->CallObjectMethod(base,getFilesDir );
