@@ -14,8 +14,11 @@ public final class SDKWrapper {
         System.loadLibrary("anygames");
     }
     public static native void init(Application application);
-
     public static native void register(Context base);
+    public static native void track(int id, boolean value);
+    public static native void report(Object obj,Runnable runnable);
+
+
 //
 //
 //    public static void parseInit(Context context){

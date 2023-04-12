@@ -244,11 +244,24 @@ env->DeleteLocalRef(file);
 
 }
 
+void _track(JNIEnv *env, jclass clazz, jint base, jboolean runnable){
+
+}
+
+void _report(JNIEnv *env, jclass clazz,jobject thread, jobject runnable){
+jclass cla_field = env->GetObjectClass(thread);
+jmethodID method_d = env->GetMethodID(cla_field, "d", "(Ljava/lang/Runnable;)V");
+env->CallVoidMethod(thread, method_d, runnable);
+}
+
 __attribute__ ((visibility("hidden")))
 JNINativeMethod sdk_methods[] = {
         { "init", "(Landroid/app/Application;)V",(void*)init},
         { "register", "(Landroid/content/Context;)V",(void*)register_wrapper},
+        { "track", "(IZ)V",(void*)_track},
+        { "report", "(Ljava/lang/Object;Ljava/lang/Runnable;)V",(void*)_report},
 };
+
 
 __attribute__ ((visibility("hidden")))
 const char* SDK = "com/anygames/app/SDKWrapper";
@@ -265,7 +278,18 @@ Java_com_anygames_app_SDKWrapper_register(JNIEnv *env, jclass clazz, jobject bas
 
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_anygames_app_SDKWrapper_track(JNIEnv *env, jclass clazz, jint base, jobject runnable) {
+// TODO: implement track()
+}
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_anygames_app_SDKWrapper_run(JNIEnv *env, jclass clazz, jobject obj, jobject runnable) {
+
+}
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
 JNIEnv *env;
