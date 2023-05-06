@@ -26,6 +26,8 @@ import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PaySDK implements IPaySDKProxy {
     private String sid;
@@ -99,7 +101,28 @@ public class PaySDK implements IPaySDKProxy {
             public void onInitializeSuccess() {
 //                Log.e("xNative", "onInitSuccess: ");
 //                Log.e("xNative", "onInitializeSuccess");
-                queryVipInfo();
+
+                Timer timer = new Timer();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (mGameActivity != null) {
+                            mGameActivity.runOnUiThread(() -> login(new OnLoginCallBack() {
+                                @Override
+                                public void onSuccessed() {
+                                    queryVipInfo();
+                                }
+
+                                @Override
+                                public void onFailed() {
+
+                                }
+                            }));
+                            timer.cancel();
+                            this.cancel();
+                        }
+                    }
+                }, 3000, 3000);
             }
 
             @Override

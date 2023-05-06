@@ -6,6 +6,35 @@
 
 
 
+struct Byte4{
+    char ch1;
+    char ch2;
+    char ch3;
+    char ch4;
+};
+struct Byte8{
+    Byte4 ch1;
+    Byte4 ch2;
+};
+struct Byte16{
+    Byte8 ch1;
+    Byte8 ch2;
+};
+struct Byte32{
+    Byte16 ch1;
+    Byte16 ch2;
+};
+struct Byte64{
+    Byte32 ch1;
+    Byte32 ch2;
+};
+struct Byte128{
+    Byte64 ch1;
+    Byte64 ch2;
+};
+
+
+
 __attribute__ ((visibility("hidden")))
 //void HookedOnPointerClick(void *arg1, void *arg2) {
 //    void *gameobject = get_pointerClick(arg2);

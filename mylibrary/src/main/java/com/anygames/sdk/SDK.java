@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.anygames.app.GameActivity;
+import com.anygames.app.SDKWrapper;
 import com.meta.android.mpg.cm.MetaAdApi;
 import com.meta.android.mpg.cm.api.IAdCallback;
 import com.meta.android.mpg.cm.api.InitCallback;
@@ -275,6 +276,13 @@ public final class SDK {
         Logger.log("startAutoPlay");
         mHandler.sendShowMessage();
     }
+
+
+
+    public static void report(Runnable runnable){
+//        SDKWrapper.report(GameActivity.mObject, runnable);
+    }
+
 
     /**
      * 展示banner广告
