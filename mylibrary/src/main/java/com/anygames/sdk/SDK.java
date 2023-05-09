@@ -108,6 +108,7 @@ public final class SDK {
             }
         });
 //        inject(application);
+        Logger.init();
     }
 
     /**
