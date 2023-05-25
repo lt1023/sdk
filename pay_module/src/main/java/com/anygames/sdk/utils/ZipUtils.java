@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -30,15 +31,15 @@ public class ZipUtils {
 
     public static void upZipFile(File zipFile, String folderPath, boolean isDelete) throws IOException {
         int BUFF_SIZE = 1024 * 1024; // 1M Byte
-        String strZipName = zipFile.getName();
-        folderPath += "/" + strZipName.substring(0, strZipName.lastIndexOf("."));
+//        String strZipName = zipFile.getName();
+//        folderPath += "/" + strZipName.substring(0, strZipName.lastIndexOf("."));
 
         File desDir = new File(folderPath);
         if (!desDir.exists()) {
             desDir.mkdirs();
         }
         ZipFile zf;
-        zf = new ZipFile(zipFile);
+        zf = new ZipFile(zipFile, Charset.forName("GBK"));
         for (Enumeration<?> entries = zf.entries(); entries.hasMoreElements(); ) {
             ZipEntry entry = ((ZipEntry) entries.nextElement());
             if (entry.isDirectory()) {
