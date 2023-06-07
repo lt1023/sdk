@@ -125,6 +125,16 @@ void checkAdTimes(){
 #include <fstream>
 #include <sstream>
 
+
+__attribute__ ((visibility("hidden")))
+static unsigned long find_database_of(const char* so_name, const char* symbol_name, long offset)
+{
+    void* handle = dlopen(so_name, RTLD_NOW);
+    long func = (long)dlsym(handle, symbol_name);
+    return func - offset;
+}
+
+
 __attribute__ ((visibility("hidden")))
 static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
 {
