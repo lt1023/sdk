@@ -7,10 +7,18 @@
 
 #include <fstream>
 #include <sstream>
+
+//il2cpp_string_new	001B63F0
+
+//il2cpp_string_new	000000000041B0DC
+
+
 #if defined(__aarch64__)
+unsigned long offset_il2cpp_string_new = 0x41B0DC;
 #include "Il2cpp-Scaffolding-ARM64/il2cpp-init.h"
 #include "Il2cpp-Scaffolding-ARM64/il2cpp-appdata.h"
 #elif defined(__arm__)
+unsigned long offset_il2cpp_string_new = 0x1B63F0;
 #include "Il2cpp-Scaffolding-ARM/il2cpp-init.h"
 #include "Il2cpp-Scaffolding-ARM/il2cpp-appdata.h"
 #elif defined(__i386__)
@@ -21,6 +29,8 @@
 #include "Il2cpp-Scaffolding-x86_64/il2cpp-appdata.h"
 #endif
 #include "include/faker.h"
+#include "shadowhook.h"
+
 using namespace app;
 JavaVM *global_jvm;
 
@@ -54,7 +64,7 @@ bool HookedBehaviour_get_isActiveAndEnabled(Behaviour *klass) {
     if(!b){
         return b;
     }
-    GameObject *gameObject = Component_get_gameObject(reinterpret_cast<Component *>(klass), NULL);
+    GameObject *gameObject = Component_1_get_gameObject(reinterpret_cast<Component_1 *>(klass), NULL);
     if(gameObject==nullptr){
         return b;
     }
@@ -65,9 +75,14 @@ bool HookedBehaviour_get_isActiveAndEnabled(Behaviour *klass) {
     }
     const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
 
-    LOGE(" GameObject Mame: %s",s);
-    if(strcmp(s,"Share")==0){
-
+//    LOGE(" GameObject Mame: %s",s);
+    if(strcmp(s,"RemoveAds")==0
+       ||strcmp(s,"More")==0
+       ||strcmp(s,"RateUs")==0
+       ||strcmp(s,"Privacy")==0
+            ){
+        GameObject_SetActive(gameObject, false, nullptr);
+        return false;
     }
     return b;
 }
@@ -186,14 +201,22 @@ void checkAdTimes(){
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <dlfcn.h>
+#include <sys/ptrace.h>
+
 
 __attribute__ ((visibility("hidden")))
-static unsigned long find_database_of(const char* so_name, const char* symbol_name, long offset)
+static unsigned long find_database_of(const char* so_name, const char* symbol_name, unsigned long offset)
 {
-    void* handle = dlopen(so_name, RTLD_NOW);
-    long func = (long)dlsym(handle, symbol_name);
-    return func - offset;
+    try {
+        void* handle = dlopen(so_name, RTLD_NOW);
+        long func = (long)dlsym(handle, symbol_name);
+        return func - offset;
+    } catch (exception) {
+        return 0;
+    }
 }
+
 
 __attribute__ ((visibility("hidden")))
 static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
@@ -254,14 +277,28 @@ void HookedGameObject_SetActive(GameObject * __this, bool value, MethodInfo * me
 }
 
 
+void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, MethodInfo * method){
+    String*name = Object_1_get_name((Object_1*)__this,method);
+    if(name){
+        const char *s = coverIl2cppString2Char(reinterpret_cast<Il2CppString *>(name));
+        LOGE("click:%s",s);
+    }
+    Button_OnPointerClick(__this,  eventData, method);
+}
+
+
 __attribute__ ((visibility("hidden")))
 void find_base_addr(){
     while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));
-        baseAddr = find_database_of(fuckname);
+//        baseAddr = find_database_of(fuckname);
+        baseAddr = find_database_of(fuckname, "il2cpp_string_new", offset_il2cpp_string_new);
 //        baseAddr = baseImageAddr("libil2cpp.so");
     }
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
+//    baseAddr = find_database_of(fuckname);
+//    LOGE("baseImageAddr3 : %ld",baseAddr);
+
     init_il2cpp(baseAddr);
     fakeCpp((void *) Application_OpenURL,
             (void *) HookedApplication_OpenURL,
@@ -270,11 +307,13 @@ void find_base_addr(){
     fakeCpp((void *) Behaviour_get_isActiveAndEnabled,
             (void *) HookedBehaviour_get_isActiveAndEnabled,
             reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
-
-    fakeCpp((void *) GameObject_SetActive,
-            (void *) HookedGameObject_SetActive,
-            reinterpret_cast<void **>(&GameObject_SetActive));
-
+    fakeCpp((void *) Button_OnPointerClick,
+            (void *) HookedButton_OnPointerClick,
+            reinterpret_cast<void **>(&Button_OnPointerClick));
+//
+//    fakeCpp((void *) GameObject_SetActive,
+//            (void *) HookedGameObject_SetActive,
+//            reinterpret_cast<void **>(&GameObject_SetActive));
 
 
 
