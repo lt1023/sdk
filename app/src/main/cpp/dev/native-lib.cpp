@@ -9,17 +9,14 @@
 #include "include/faker.h"
 #include <thread>
 
-#ifdef DCIRDLL_EXPORTS
-#ifdef PLATFORM_LINUX
-#define MYDCIR_API __attribute__((visibility ("default")))  //Linux动态库(.so)
-#else
-#define MYDCIR_API __declspec(dllexport)//Windows动态库(.dll)
+unsigned const char* symbol_name = nullptr;
+#if defined(__aarch64__)
+symbol_name = "JNI_OnLoad";
+unsigned long offset_JNI_OnLoad = 0x41B0DC;
+#elif defined(__arm__)
+symbol_name = "JNI_OnLoad";
+unsigned long offset_JNI_OnLoad = 0x1B63F0;
 #endif
-#else
-#define MTDCIR_API
-#endif
-
-
 
 JavaVM *global_jvm;
 
@@ -189,7 +186,8 @@ __attribute__ ((visibility("hidden")))
 void find_base_addr(){
     while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));
-        baseAddr = find_database_of(fuckname);
+//        baseAddr = find_database_of(fuckname);
+        baseAddr = find_database_of(fuckname, symbol_name, offset_JNI_OnLoad);
 //        baseAddr = baseImageAddr("libil2cpp.so");
     }
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
