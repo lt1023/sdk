@@ -44,3 +44,34 @@ struct ACTkByte16
     char b15; // 0x3
     char b16; // 0x3
 };
+
+
+//保存LUA文件到Sdcard
+void saveFile(const char *data, size_t data_len, const char *path) {
+    FILE* outfile;
+    char drive[_MAX_DRIVE];
+    char dir[_MAX_DIR];
+    char fname[_MAX_FNAME];
+    char ext[_MAX_EXT];
+    std::string filename(path);
+    std::string _path = ("/data/data/com.fantablade.watergun/files/");
+    _path.append(filename);
+    char *s = new char[100];
+    strcpy(s,_path.c_str());
+    _splitpath(s, drive, dir, fname, ext);
+    //如果文件已经存在直接返回
+    if(0 == access(s,F_OK))
+    {
+        LOGI("[dumpulua]  path:%s Exist",s);
+        return;
+    } else {
+        //创建目录
+        createMultiLevelDir(dir);
+        LOGI("[dumpulua]  path:%s New file",s);
+    }
+    FILE *file = fopen(s, "wb+");
+    if (file != NULL) {
+        fwrite(data , sizeof(unsigned char) , data_len , file);
+        fclose(file);
+    }
+}

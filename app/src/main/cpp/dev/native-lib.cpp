@@ -121,7 +121,7 @@ void checkAdTimes(){
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
+#include <dlfcn.h>
 
 __attribute__ ((visibility("hidden")))
 static unsigned long find_database_of(const char* so_name, const char* symbol_name, long offset)
