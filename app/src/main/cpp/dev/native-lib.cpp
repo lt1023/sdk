@@ -9,14 +9,14 @@
 #include "include/faker.h"
 #include <thread>
 
-unsigned const char* symbol_name = nullptr;
+
+const char* symbol_name = "JNI_OnLoad";
 #if defined(__aarch64__)
-symbol_name = "JNI_OnLoad";
 unsigned long offset_JNI_OnLoad = 0x41B0DC;
 #elif defined(__arm__)
-symbol_name = "JNI_OnLoad";
 unsigned long offset_JNI_OnLoad = 0x1B63F0;
 #endif
+
 
 JavaVM *global_jvm;
 
