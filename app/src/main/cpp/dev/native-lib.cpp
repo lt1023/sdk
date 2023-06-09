@@ -12,9 +12,9 @@
 
 const char* symbol_name = "JNI_OnLoad";
 #if defined(__aarch64__)
-unsigned long offset_JNI_OnLoad = 0x41B0DC;
+unsigned long offset_symbol_name = 0x41B0DC;
 #elif defined(__arm__)
-unsigned long offset_JNI_OnLoad = 0x1B63F0;
+unsigned long offset_symbol_name = 0x1B63F0;
 #endif
 
 
@@ -124,7 +124,7 @@ void checkAdTimes(){
 #include <dlfcn.h>
 
 __attribute__ ((visibility("hidden")))
-static unsigned long find_database_of(const char* so_name, const char* symbol_name, long offset)
+static unsigned long find_database_of(const char* so_name, const char* symbol_name, unsigned long offset)
 {
     void* handle = dlopen(so_name, RTLD_NOW);
     long func = (long)dlsym(handle, symbol_name);
@@ -187,7 +187,7 @@ void find_base_addr(){
     while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));
 //        baseAddr = find_database_of(fuckname);
-        baseAddr = find_database_of(fuckname, symbol_name, offset_JNI_OnLoad);
+        baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
 //        baseAddr = baseImageAddr("libil2cpp.so");
     }
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
