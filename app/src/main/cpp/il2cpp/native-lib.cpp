@@ -29,7 +29,16 @@ unsigned long offset_il2cpp_string_new = 0x1B63F0;
 #include "Il2cpp-Scaffolding-x86_64/il2cpp-appdata.h"
 #endif
 #include "include/faker.h"
-#include "shadowhook.h"
+
+const char* symbol_name = "il2cpp_string_new";
+#if defined(__aarch64__)
+//il2cpp_string_new	000000000084EC14
+unsigned long offset_symbol_name = 0x084EC14;
+#elif defined(__arm__)
+//il2cpp_string_new	00400F18
+unsigned long offset_symbol_name = 0x00400F18;
+#endif
+
 
 using namespace app;
 JavaVM *global_jvm;
@@ -290,13 +299,10 @@ void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, 
 __attribute__ ((visibility("hidden")))
 void find_base_addr(){
     while(!baseAddr){
-//        this_thread::sleep_for(std::chrono::seconds(1));
 //        baseAddr = find_database_of(fuckname);
-        baseAddr = find_database_of(fuckname, "il2cpp_string_new", offset_il2cpp_string_new);
+        baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
 //        baseAddr = baseImageAddr("libil2cpp.so");
     }
-//    LOGE("baseImageAddr3 : %ld",baseAddr);
-//    baseAddr = find_database_of(fuckname);
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
 
     init_il2cpp(baseAddr);
