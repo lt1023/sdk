@@ -1,7 +1,7 @@
 //
 // Created by ZERO on 2022/10/18.
 //
-#include "include/faker.h"
+//#include "include/faker.h"
 #include "./MonoString.h"
 
 
@@ -31,6 +31,17 @@ struct Byte64{
 struct Byte128{
     Byte64 ch1;
     Byte64 ch2;
+};
+
+struct Byte256{
+    Byte128 ch1;
+    Byte128 ch2;
+};
+
+
+struct Byte512{
+    Byte256 ch1;
+    Byte256 ch2;
 };
 
 
@@ -114,7 +125,6 @@ void init_isActiveAndEnabled(long addr_get_isActiveAndEnabled, long addr_gameobj
                              long addr_object_get_name, long addr_get_gameObject,
                              void *isActiveAndEnabled) {
     gameobject_SetActive = reinterpret_cast<void (*)(void *, bool)>(addr_gameobject_SetActive);
-    object_get_name = reinterpret_cast<void *(*)(void *)>(addr_object_get_name);
     get_gameObject = reinterpret_cast<void *(*)(void *)>(addr_get_gameObject);//Component
     fakeCpp((void *) addr_get_isActiveAndEnabled,
             isActiveAndEnabled,
@@ -153,14 +163,18 @@ void (*Text_OnEnable)(void* obj) = nullptr;
 void* (*Text_get_text)(void* obj) = nullptr;
 void* (*il2cpp_string_new)(const char *value) = nullptr;
 
+void init_il2cpp_string_new(long add_il2cpp_string_new){
+    il2cpp_string_new = reinterpret_cast<void *(*)(const char *)>(add_il2cpp_string_new);
+}
 
+void init_object_get_name(long add_object_get_name){
+    object_get_name = reinterpret_cast<void *(*)(void *)>(add_object_get_name);
+}
 
 void init_Text(long add_Text_set_text,long add_Text_get_text,long add_Text_OnEnable,long add_il2cpp_string_new, void* praseText, void* OnEnable){
     Text_set_text = reinterpret_cast<void (*)(void *, void *)>(add_Text_set_text);
     Text_get_text = reinterpret_cast<void *(*)(void *)>(add_Text_get_text);
     Text_OnEnable = reinterpret_cast<void (*)(void *)>(add_Text_OnEnable);
-    il2cpp_string_new = reinterpret_cast<void *(*)(const char *)>(add_il2cpp_string_new);
-
 //    praseText = src_praseText;
     fakeCpp((void *) add_Text_set_text,
             (void *) praseText,
@@ -177,24 +191,24 @@ void init_Text(long add_Text_set_text,long add_Text_get_text,long add_Text_OnEna
 //init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,add_il2cpp_string_new,(void* )praseText,(void* )AText_OnEnable);
 
 
-//__attribute__ ((visibility("hidden")))
-//void praseText(void* obj, void*value){
-//
-//    if (value){
-//        const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(value));
-//        if (s){
-//            LOGE("praseText %s", s);
-//            if (strcmp(s, "MUSKETS OF AMERICA")==0){
-//                value = il2cpp_string_new("");
-//            }
-//            Text_set_text(obj, value);
-//        }
-//    }
-//
-//}
-//
-//__attribute__ ((visibility("hidden")))
-//void AText_OnEnable(void* obj){
-//    Text_OnEnable(obj);
-//    praseText(obj, Text_get_text(obj));
-//}
+__attribute__ ((visibility("hidden")))
+void praseText(void* obj, void*value){
+
+    if (value){
+        const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(value));
+        if (s){
+            LOGE("praseText %s", s);
+            if (strcmp(s, "MUSKETS OF AMERICA")==0){
+                value = il2cpp_string_new("");
+            }
+            Text_set_text(obj, value);
+        }
+    }
+
+}
+
+__attribute__ ((visibility("hidden")))
+void AText_OnEnable(void* obj){
+    Text_OnEnable(obj);
+    praseText(obj, Text_get_text(obj));
+}
