@@ -9,11 +9,12 @@
 #include "include/faker.h"
 #include "valid.h"
 #include <thread>
-
+#include "normal-function.h"
 
 
 #if defined(__aarch64__)
 #include "arm64.h"
+
 #elif defined(__arm__)
 #include "arm.h"
 #endif
@@ -193,13 +194,28 @@ void find_base_addr(){
 //    }
     baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
 
+    init_il2cpp_string_new(baseAddr + offset_symbol_name);
+    init_object_get_name(baseAddr + offset_object_get_name);
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
-//    init_il2cpp(baseAddr);
-//
-//    long Application_OpenURL = baseAddr + ;
-//    fakeCpp((void *) Application_OpenURL,
-//            (void *) HookedApplication_OpenURL,
-//            reinterpret_cast<void **>(&Application_OpenURL));
+
+    long Application_OpenURL = baseAddr + offset_Application_OpenURL;
+    fakeCpp((void *) Application_OpenURL,
+            (void *) HookedApplication_OpenURL,
+            reinterpret_cast<void **>(&Application_OpenURL));
+
+    long add_Text_set_text = baseAddr+offset_Text_set_text;
+    long add_Text_get_text = baseAddr+offset_Text_get_text;
+    long add_Text_OnEnable = baseAddr+offset_Text_OnEnable;//ParseInputText
+    init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,offset_symbol_name,(void* )praseText,(void* )AText_OnEnable);
+
+
+
+    long addr_gameobject_SetActive = baseAddr + offset_gameobject_SetActive;
+    long addr_get_gameObject = baseAddr + offset_get_gameObject;
+    long addr_get_isActiveAndEnabled = baseAddr + offset_gameobject_SetActive;
+    init_isActiveAndEnabled(addr_get_isActiveAndEnabled, addr_gameobject_SetActive, offset_object_get_name, addr_get_gameObject, (void*)isActiveAndEnabled);
+
+
 
 }
 
