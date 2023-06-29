@@ -6,6 +6,8 @@ include_directories(src/main/cpp/include)
 
 find_package(base REQUIRED CONFIG)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
+set(CMAKE_C_FLAGS "-Wall -Wextra -Werror -fvisibility=hidden")
+
 
 file(GLOB native_srcc "${CMAKE_SOURCE_DIR}/*.cpp")
 add_library(

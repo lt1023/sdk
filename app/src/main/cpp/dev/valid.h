@@ -95,7 +95,7 @@ char* getSha1(JNIEnv *env, jobject context_object){
     return hex_sha;
 }
 
-jboolean checkValidity(JNIEnv *env,char *sha1){
+jboolean checkValidity(char *sha1){
     //比较签名
     if (strcmp(sha1,app_sha1)==0)
     {
@@ -106,6 +106,11 @@ jboolean checkValidity(JNIEnv *env,char *sha1){
     return false;
 }
 
+bool check(JNIEnv *env , jobject contextObject){
+    char *sha1 = getSha1(env,contextObject);
+    jboolean result = checkValidity(sha1);
+    return result;
+}
 
 //if (!check(env, application)){
 //exit(0);

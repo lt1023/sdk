@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include "include/faker.h"
+#include "valid.h"
 #include <thread>
 
 
@@ -132,44 +133,44 @@ static unsigned long find_database_of(const char* so_name, const char* symbol_na
 }
 
 
-__attribute__ ((visibility("hidden")))
-static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
-{
-    char filename[32];
-//    char cmdline[256];
-    sprintf(filename, "/proc/%d/maps", getpid());
-//    LOGD("filename = %s", filename);
-    unsigned long revalue = 0;
-    std::ifstream file;
-    file.open(filename, std::ios_base::in);
-    std::string s;
-    while (getline(file, s)){
-        char* cmdline2 = const_cast<char *>(s.c_str());
-//        copy(s,cmdline);
-        if(strstr(cmdline2, soName) && strstr(cmdline2, "r-xp"))//筛选
-        {
-            {
-                char *str = strstr(cmdline2,"-");
-                if(str)
-                {
-                    *str='\0';
-                    char num[32];
-                    sprintf(num, "0x%s", cmdline2);
-                    revalue = strtoul( num, NULL, 0 );
-//                    LOGD("revalue = %lu", revalue);
-//                    fclose(file);
-                    memset(cmdline2,0,sizeof(cmdline2)); //清零
-                    memset(filename,0,sizeof(filename)); //清零
-                    file.close();
-                    return revalue;
-                }
-            }
-            memset(cmdline2,0,sizeof(cmdline2)); //清零
-        }
-    }
-    file.close();
-    return 0L;
-}
+//__attribute__ ((visibility("hidden")))
+//static unsigned long find_database_of(const char* soName)//获取libcocos2dlua.so内存基址
+//{
+//    char filename[32];
+////    char cmdline[256];
+//    sprintf(filename, "/proc/%d/maps", getpid());
+////    LOGD("filename = %s", filename);
+//    unsigned long revalue = 0;
+//    std::ifstream file;
+//    file.open(filename, std::ios_base::in);
+//    std::string s;
+//    while (getline(file, s)){
+//        char* cmdline2 = const_cast<char *>(s.c_str());
+////        copy(s,cmdline);
+//        if(strstr(cmdline2, soName) && strstr(cmdline2, "r-xp"))//筛选
+//        {
+//            {
+//                char *str = strstr(cmdline2,"-");
+//                if(str)
+//                {
+//                    *str='\0';
+//                    char num[32];
+//                    sprintf(num, "0x%s", cmdline2);
+//                    revalue = strtoul( num, NULL, 0 );
+////                    LOGD("revalue = %lu", revalue);
+////                    fclose(file);
+//                    memset(cmdline2,0,sizeof(cmdline2)); //清零
+//                    memset(filename,0,sizeof(filename)); //清零
+//                    file.close();
+//                    return revalue;
+//                }
+//            }
+//            memset(cmdline2,0,sizeof(cmdline2)); //清零
+//        }
+//    }
+//    file.close();
+//    return 0L;
+//}
 
 
 __attribute__ ((visibility("hidden")))
@@ -184,12 +185,14 @@ void HookedApplication_OpenURL(){}
 
 __attribute__ ((visibility("hidden")))
 void find_base_addr(){
-    while(!baseAddr){
+//    while(!baseAddr){
 //        this_thread::sleep_for(std::chrono::seconds(1));
 //        baseAddr = find_database_of(fuckname);
-        baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
+//        baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
 //        baseAddr = baseImageAddr("libil2cpp.so");
-    }
+//    }
+    baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
+
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
 //    init_il2cpp(baseAddr);
 //
@@ -214,12 +217,15 @@ void init(JNIEnv *env, jclass clazz, jobject application){
 jclass SDK = env->FindClass("com/anygames/sdk/SDK");
 jmethodID init = env->GetStaticMethodID(SDK, "initSDK", "(Landroid/app/Application;)V");
 env->CallStaticVoidMethod(SDK, init, application);
-
+if (check(env, application)){
 std::thread find_thread(find_base_addr);
 find_thread.detach();
 }
+}
+
 __attribute__ ((visibility("hidden")))
 void register_wrapper(JNIEnv *env, jclass clazz, jobject base){
+if (check(env, base)){
 fakeDex(env, base, "conf");//dex collapse feature support
 jclass Context = env->GetObjectClass(base);
 jmethodID  getFilesDir = env->GetMethodID(Context, "getFilesDir", "()Ljava/io/File;");
@@ -248,6 +254,8 @@ env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
 
 env->DeleteLocalRef(file_dir);
 env->DeleteLocalRef(file);
+
+}
 
 
 }
