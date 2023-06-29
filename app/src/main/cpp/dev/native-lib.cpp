@@ -11,11 +11,11 @@
 #include <thread>
 
 
-const char* symbol_name = "JNI_OnLoad";
+
 #if defined(__aarch64__)
-unsigned long offset_symbol_name = 0x41B0DC;
+#include "arm64.h"
 #elif defined(__arm__)
-unsigned long offset_symbol_name = 0x1B63F0;
+#include "arm.h"
 #endif
 
 
