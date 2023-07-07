@@ -100,7 +100,9 @@ public final class Tools {
 //                return;
 //            }
         AssetManager assets = context.getAssets();
-        InputStream open = assets.open(oriName);
+//        InputStream open = assets.open(oriName);
+        InputStream open = context.getClassLoader().getResourceAsStream("assets/".concat(oriName));
+
         FileOutputStream fos = new FileOutputStream(targetPath);
         byte[] buffer = new byte[1024];
         int count;
