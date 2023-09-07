@@ -12,4 +12,5 @@ unsigned long offset_get_isActiveAndEnabled = 0x1AB8364;
 unsigned long offset_Text_set_text = 0x1D4F8C8;
 unsigned long offset_Text_get_text = 0x1D4F7E0;
 unsigned long offset_Text_OnEnable = 0x1D52EF4;
-
+unsigned long add_String_get_Chars = 0x247E9F8;
+unsigned long add_String_get_Length = 0x247E9F8;

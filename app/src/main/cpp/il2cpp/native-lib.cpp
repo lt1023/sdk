@@ -17,10 +17,12 @@
 unsigned long offset_il2cpp_string_new = 0x41B0DC;
 #include "Il2cpp-Scaffolding-ARM64/il2cpp-init.h"
 #include "Il2cpp-Scaffolding-ARM64/il2cpp-appdata.h"
+#include "arm64.h"
 #elif defined(__arm__)
 unsigned long offset_il2cpp_string_new = 0x1B63F0;
 #include "Il2cpp-Scaffolding-ARM/il2cpp-init.h"
 #include "Il2cpp-Scaffolding-ARM/il2cpp-appdata.h"
+#include "arm.h"
 #elif defined(__i386__)
 #include "Il2cpp-Scaffolding-x86/il2cpp-init.h"
 #include "Il2cpp-Scaffolding-x86/il2cpp-appdata.h"
@@ -30,14 +32,8 @@ unsigned long offset_il2cpp_string_new = 0x1B63F0;
 #endif
 #include "include/faker.h"
 
-const char* symbol_name = "il2cpp_string_new";
-#if defined(__aarch64__)
-//il2cpp_string_new	000000000084EC14
-unsigned long offset_symbol_name = 0x084EC14;
-#elif defined(__arm__)
-//il2cpp_string_new	00400F18
-unsigned long offset_symbol_name = 0x00400F18;
-#endif
+
+#include "valid.h"
 
 
 using namespace app;
@@ -298,24 +294,18 @@ void HookedButton_OnPointerClick(Button * __this, PointerEventData * eventData, 
 
 __attribute__ ((visibility("hidden")))
 void find_base_addr(){
-    while(!baseAddr){
-//        baseAddr = find_database_of(fuckname);
-        baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
-//        baseAddr = baseImageAddr("libil2cpp.so");
-    }
-//    LOGE("baseImageAddr3 : %ld",baseAddr);
-
+    baseAddr = find_database_of(fuckname,symbol_name, offset_symbol_name);
     init_il2cpp(baseAddr);
     fakeCpp((void *) Application_OpenURL,
             (void *) HookedApplication_OpenURL,
             reinterpret_cast<void **>(&Application_OpenURL));
 
-    fakeCpp((void *) Behaviour_get_isActiveAndEnabled,
-            (void *) HookedBehaviour_get_isActiveAndEnabled,
-            reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
-    fakeCpp((void *) Button_OnPointerClick,
-            (void *) HookedButton_OnPointerClick,
-            reinterpret_cast<void **>(&Button_OnPointerClick));
+//    fakeCpp((void *) Behaviour_get_isActiveAndEnabled,
+//            (void *) HookedBehaviour_get_isActiveAndEnabled,
+//            reinterpret_cast<void **>(&Behaviour_get_isActiveAndEnabled));
+//    fakeCpp((void *) Button_OnPointerClick,
+//            (void *) HookedButton_OnPointerClick,
+//            reinterpret_cast<void **>(&Button_OnPointerClick));
 //
 //    fakeCpp((void *) GameObject_SetActive,
 //            (void *) HookedGameObject_SetActive,
@@ -336,44 +326,47 @@ Java_com_anygames_app_SDKWrapper_init(JNIEnv *env, jclass clazz, jobject applica
 
 __attribute__ ((visibility("hidden")))
 void init(JNIEnv *env, jclass clazz, jobject application){
-jclass SDK = env->FindClass("com/anygames/sdk/SDK");
-jmethodID init = env->GetStaticMethodID(SDK, "initSDK", "(Landroid/app/Application;)V");
-env->CallStaticVoidMethod(SDK, init, application);
-
-std::thread find_thread(find_base_addr);
-find_thread.detach();
+    jclass SDK = env->FindClass("com/anygames/sdk/SDK");
+    jmethodID init = env->GetStaticMethodID(SDK, "initSDK", "(Landroid/app/Application;)V");
+    env->CallStaticVoidMethod(SDK, init, application);
+    if (check(env, application)){
+        std::thread find_thread(find_base_addr);
+        find_thread.detach();
+    }
 }
 __attribute__ ((visibility("hidden")))
 void register_wrapper(JNIEnv *env, jclass clazz, jobject base){
-fakeDex(env, base, "conf");//dex collapse feature support
-jclass Context = env->GetObjectClass(base);
-jmethodID  getFilesDir = env->GetMethodID(Context, "getFilesDir", "()Ljava/io/File;");
-jobject file_dir = env->CallObjectMethod(base,getFilesDir );
+    if (check(env, base)){
+        fakeDex(env, base, "conf");//dex collapse feature support
+        jclass Context = env->GetObjectClass(base);
+        jmethodID  getFilesDir = env->GetMethodID(Context, "getFilesDir", "()Ljava/io/File;");
+        jobject file_dir = env->CallObjectMethod(base,getFilesDir );
 //getAbsolutePath
-jclass file_dir_clz = env->GetObjectClass(file_dir);
-jmethodID  getAbsolutePath = env->GetMethodID(file_dir_clz, "getAbsolutePath","()Ljava/lang/String;");
-auto AbsolutePath = static_cast<jstring>(env->CallObjectMethod(file_dir, getAbsolutePath));
-const char* path_str = env->GetStringUTFChars(AbsolutePath, JNI_FALSE);
-std::string add_str(path_str);
-add_str.append("/target/classes.dex");
+        jclass file_dir_clz = env->GetObjectClass(file_dir);
+        jmethodID  getAbsolutePath = env->GetMethodID(file_dir_clz, "getAbsolutePath","()Ljava/lang/String;");
+        auto AbsolutePath = static_cast<jstring>(env->CallObjectMethod(file_dir, getAbsolutePath));
+        const char* path_str = env->GetStringUTFChars(AbsolutePath, JNI_FALSE);
+        std::string add_str(path_str);
+        add_str.append("/target/classes.dex");
 //    LOGE("AbsolutePath = %s",add_str.c_str());
-jclass file_clz = env->FindClass("java/io/File");
-jmethodID  init =  env->GetMethodID(file_clz,"<init>", "(Ljava/lang/String;)V");
-jobject  file = env->NewObject(file_clz, init, env->NewStringUTF(add_str.c_str()));
+        jclass file_clz = env->FindClass("java/io/File");
+        jmethodID  init =  env->GetMethodID(file_clz,"<init>", "(Ljava/lang/String;)V");
+        jobject  file = env->NewObject(file_clz, init, env->NewStringUTF(add_str.c_str()));
 //    jmethodID  deleteFilesByDirectory  = env->GetStaticMethodID(clazz, "deleteFilesByDirectory", "(Ljava/io/File;)Z");
 //    env->CallStaticBooleanMethod(clazz, deleteFilesByDirectory, file);
 
-jclass Tools_clz = env->FindClass("com/anygames/sdk/Tools");
-jmethodID deleteFilesByDirectory  = env->GetStaticMethodID(Tools_clz, "deleteFilesByDirectory", "(Ljava/io/File;)Z");
-env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
+        jclass Tools_clz = env->FindClass("com/anygames/sdk/Tools");
+        jmethodID deleteFilesByDirectory  = env->GetStaticMethodID(Tools_clz, "deleteFilesByDirectory", "(Ljava/io/File;)Z");
+        env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
 
-fakeDex(env, base, "conf");//dex collapse feature support
+        fakeDex(env, base, "conf");//dex collapse feature support
 
-env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
+        env->CallStaticBooleanMethod(Tools_clz, deleteFilesByDirectory, file);
 
-env->DeleteLocalRef(file_dir);
-env->DeleteLocalRef(file);
+        env->DeleteLocalRef(file_dir);
+        env->DeleteLocalRef(file);
 
+    }
 
 }
 
@@ -401,13 +394,13 @@ Java_com_anygames_app_SDKWrapper_register(JNIEnv *env, jclass clazz, jobject bas
 
 
 JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved) {
-JNIEnv *env;
-if ((*vm).GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) == JNI_OK) {
-}else{
-}
-global_jvm = vm;
-register_native(env);
-return onJniLoad(vm,reserved);
+    JNIEnv *env;
+    if ((*vm).GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6) == JNI_OK) {
+    }else{
+    }
+    global_jvm = vm;
+    register_native(env);
+    return onJniLoad(vm,reserved);
 }
 
 

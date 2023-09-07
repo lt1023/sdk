@@ -1,6 +1,7 @@
 package com.anygames;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.util.Log;
@@ -14,7 +15,7 @@ import java.util.TimerTask;
 
 public class Tools {
     public static interface OnInitListener {
-        void onSuccess();
+        void onSuccess() throws IOException;
 
         void onFailed();
     }
@@ -41,8 +42,18 @@ public class Tools {
 //                            Log.e("anygames", "realName="+realName );
                             copyObb(context, oriName, realName, new OnInitListener() {
                                 @Override
-                                public void onSuccess() {
-                                    listener.onSuccess();
+                                public void onSuccess() throws IOException {
+                                    copyPatchObbIfExist(context, new OnInitListener() {
+                                        @Override
+                                        public void onSuccess() throws IOException {
+                                            listener.onSuccess();
+                                        }
+
+                                        @Override
+                                        public void onFailed() {
+                                            listener.onFailed();
+                                        }
+                                    });
                                 }
 
                                 @Override
@@ -63,6 +74,30 @@ public class Tools {
         }).start();
     }
 
+    private static void copyPatchObbIfExist(Context context, OnInitListener listener) throws IOException {
+        AssetManager assets = context.getAssets();
+        String[] patches = assets.list("patch");
+        if (patches == null && patches.length == 0) {
+            listener.onSuccess();
+            return;
+        }
+        for (String name : patches) {
+            String path = "patch/".concat(name);
+            copyObb(context, path, name, new OnInitListener() {
+                @Override
+                public void onSuccess() throws IOException {
+
+                }
+
+                @Override
+                public void onFailed() {
+                    listener.onFailed();
+                }
+            });
+        }
+        listener.onSuccess();
+    }
+
     private static void copyObb(Context context, String oriName, String realName, OnInitListener listener) throws IOException {
         String targetPath = context.getObbDir().getAbsolutePath() + "/" + realName;
         AssetManager assets = context.getAssets();
@@ -77,6 +112,16 @@ public class Tools {
         fos.close();
         open.close();
         listener.onSuccess();
+    }
+
+
+    public static byte[] signatureFromAPI(Context context, String pkgName) {
+        try {
+            PackageInfo info = context.getPackageManager().getPackageInfo(pkgName, PackageManager.GET_SIGNATURES);
+            return info.signatures[0].toByteArray();
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

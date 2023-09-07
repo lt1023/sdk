@@ -293,4 +293,4 @@ const char *coverIl2cppString2Char(void *str) {
     const char *s = utf16le_to_utf8(ss).c_str();
     return s;
 }
-//const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(arg2));
+//const char *s = coverIl2cppString2Char(arg2);

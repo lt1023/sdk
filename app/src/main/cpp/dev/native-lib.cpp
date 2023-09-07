@@ -198,22 +198,23 @@ void find_base_addr(){
     init_object_get_name(baseAddr + offset_object_get_name);
 //    LOGE("baseImageAddr3 : %ld",baseAddr);
 
-    long Application_OpenURL = baseAddr + offset_Application_OpenURL;
-    fakeCpp((void *) Application_OpenURL,
-            (void *) HookedApplication_OpenURL,
-            reinterpret_cast<void **>(&Application_OpenURL));
-
-    long add_Text_set_text = baseAddr+offset_Text_set_text;
-    long add_Text_get_text = baseAddr+offset_Text_get_text;
-    long add_Text_OnEnable = baseAddr+offset_Text_OnEnable;//ParseInputText
-    init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,offset_symbol_name,(void* )praseText,(void* )AText_OnEnable);
-
-
-
-    long addr_gameobject_SetActive = baseAddr + offset_gameobject_SetActive;
-    long addr_get_gameObject = baseAddr + offset_get_gameObject;
-    long addr_get_isActiveAndEnabled = baseAddr + offset_gameobject_SetActive;
-    init_isActiveAndEnabled(addr_get_isActiveAndEnabled, addr_gameobject_SetActive, offset_object_get_name, addr_get_gameObject, (void*)isActiveAndEnabled);
+//    long Application_OpenURL = baseAddr + offset_Application_OpenURL;
+//    fakeCpp((void *) Application_OpenURL,
+//            (void *) HookedApplication_OpenURL,
+//            reinterpret_cast<void **>(&Application_OpenURL));
+//
+//init_string(baseAddr + add_String_get_Chars,baseAddr + add_String_get_Length);
+//    long add_Text_set_text = baseAddr+offset_Text_set_text;
+//    long add_Text_get_text = baseAddr+offset_Text_get_text;
+//    long add_Text_OnEnable = baseAddr+offset_Text_OnEnable;//ParseInputText
+//    init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,offset_symbol_name,(void* )praseText,(void* )AText_OnEnable);
+//
+//
+//
+//    long addr_gameobject_SetActive = baseAddr + offset_gameobject_SetActive;
+//    long addr_get_gameObject = baseAddr + offset_get_gameObject;
+//    long addr_get_isActiveAndEnabled = baseAddr + offset_get_isActiveAndEnabled;
+//    init_isActiveAndEnabled(addr_get_isActiveAndEnabled, addr_gameobject_SetActive, offset_object_get_name, addr_get_gameObject, (void*)isActiveAndEnabled);
 
 
 

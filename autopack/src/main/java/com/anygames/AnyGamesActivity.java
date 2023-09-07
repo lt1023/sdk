@@ -1,24 +1,34 @@
 package com.anygames;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.util.Base64;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.anygames.view.LoadingUtil;
+
+import java.io.File;
+import java.util.Arrays;
 
 
 public final class AnyGamesActivity extends Activity {
@@ -26,6 +36,22 @@ public final class AnyGamesActivity extends Activity {
 //    private Class mTargetClass;
     private SharedPreferences mSharedPreferences;
     private Handler mHandler = new Handler(Looper.getMainLooper());
+
+    boolean isTest = false;
+
+    private static final int EmulatorType_FC = 1001;//红白
+    private static final int EmulatorType_ARCADE = 1002;//街机
+    private static final int EmulatorType_MD = 1003;
+    private static final int EmulatorType_GB = 1004;
+    private static final int EmulatorType_GBA = 1005;
+    private static final int EmulatorType_GBC = 1006;
+    private static final int EmulatorType_N64 = 1007;
+    private static final int EmulatorType_PS = 1008;
+    private static final int EmulatorType_PSP = 1009;
+    private static final int EmulatorType_NDS = 1010;
+    private static final int EmulatorType_SFC = 1011;
+    private static final int EmulatorType_ONS = 1012;
+    private static final int EmulatorType_JAVA = 1013;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,16 +79,68 @@ public final class AnyGamesActivity extends Activity {
         setContentView(view);
 //        jumpGameActivity();
 
+
+        if (isTest){
+            if (checkPermissions()){
+                startLaunchGame(this);
+            }else {
+                requestPermission();
+            }
+            return;
+        }
+
 //        if (checkPermissions()){
         startGame();
+
+
+////        byte[] bytes = Tools.signatureFromAPI(this, "com.imayi.topia");
+//        byte[] bytes = Tools.signatureFromAPI(this, "com.qqhd.game.qcpk.mi");
+//        Log.e("PmsHook", "bytes: " + Arrays.toString(bytes));
+//
+//        byte[] encode = Base64.encode(bytes, Base64.DEFAULT);
+//        Log.e("PmsHook", "encode: " + Arrays.toString(encode));
+//
+//
+//        String bytesToString = Base64.encodeToString(bytes, Base64.DEFAULT);
+//        Log.e("PmsHook", "bytesToString: " + bytesToString);
+//
+//        String encodeToString = Base64.encodeToString(encode, Base64.DEFAULT);
+//        Log.e("PmsHook", "encodeToString: " + encodeToString);
+//
+
+
 //        }else {
 //            requestPermission();
 //        }
     }
 
-//    private void requestPermission() {
-//        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-//    }
+    private void startLaunchGame(Context context) {
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        String game_path = dir.getAbsolutePath().concat("/gbc.zip");
+        startLaunchGame(context, game_path, EmulatorType_GBC);
+    }
+
+    /**
+     *
+     * @param context 上下文
+     * @param path rom路径
+     * @param game_emulator 模拟器类型
+     */
+    private void startLaunchGame(Context context, String path, int game_emulator) {
+        try {
+            PackageManager packageManager = getPackageManager();
+            Intent intent = packageManager.getLaunchIntentForPackage("com.zhangyangjing.starfish");
+            intent.putExtra("game_path", path);
+            intent.putExtra("game_emulator", game_emulator);
+            context.startActivity(intent);
+        } catch (Exception ignore) {}
+    }
+
+    private void requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+        }
+    }
 
 
     private void startGame() {
@@ -122,29 +200,32 @@ public final class AnyGamesActivity extends Activity {
         LoadingUtil.onDestory();
     }
 
-    //    @Override
-//    public void onRequestPermissionsResult(int requestCode, String[] permissions,  int[] grantResults) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        if (requestCode == 0){
-//            if (checkPermissions()){
-//                startGame();
-//            }else {
-//                new AlertDialog.Builder(this).setTitle("重要提示")
-//                        .setMessage("为了正常运行游戏，请务必授予应用存储权限")
-//                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-//                            @Override
-//                            public void onClick(DialogInterface dialog, int which) {
-//                                requestPermission();
-//                            }
-//                        }).create().show();
-//            }
-//        }
-//    }
+        @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,  int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 0){
+            if (checkPermissions()){
+                startLaunchGame(this);
+            }else {
+                new AlertDialog.Builder(this).setTitle("重要提示")
+                        .setMessage("为了正常运行游戏，请务必授予应用存储权限")
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                requestPermission();
+                            }
+                        }).create().show();
+            }
+        }
+    }
 
 
-//    private boolean checkPermissions() {
-//        return ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-//    }
+    private boolean checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
 
 //    @Override
 //    public void onJniCall(String msg) {

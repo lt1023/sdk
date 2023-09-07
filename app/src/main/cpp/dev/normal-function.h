@@ -3,8 +3,10 @@
 //
 //#include "include/faker.h"
 #include "./MonoString.h"
-
-
+#include "string_map.h"
+map<string, string> str_map = string_map_parse();
+map<string, string> start_str_map = string_start_map_parse();
+map<string, string> replace_map = string_replace_map_parse();
 
 struct Byte4{
     char ch1;
@@ -156,6 +158,13 @@ const char* replace_text(const char* ori_text, const char* rep_text , const char
     return ori_str.replace(ori_str.find(rep_text), rep_str.length(), result_text).c_str();
 }
 
+char (*String_get_Chars)(void* obj, int index) = nullptr;
+int (*String_get_Length)(void* obj) = nullptr;
+
+void init_string(long add_String_get_Chars,long add_String_get_Length){
+    String_get_Chars = reinterpret_cast<char (*)(void *, int)>(add_String_get_Chars);
+    String_get_Length = reinterpret_cast<int (*)(void *)>(add_String_get_Length);
+}
 
 
 void (*Text_set_text)(void* obj, void*value) = nullptr;
@@ -191,24 +200,78 @@ void init_Text(long add_Text_set_text,long add_Text_get_text,long add_Text_OnEna
 //init_Text(add_Text_set_text, add_Text_get_text, add_Text_OnEnable,add_il2cpp_string_new,(void* )praseText,(void* )AText_OnEnable);
 
 
-__attribute__ ((visibility("hidden")))
-void praseText(void* obj, void*value){
+// wstring转string
+std::string WstringToString(const std::wstring str)
+{
+    unsigned len = str.size() * 4;
+    setlocale(LC_CTYPE, "");
+    char *p = new char[len];
+    wcstombs(p,str.c_str(),len);
+    std::string str1(p);
+    delete[] p;
+    return str1;
+}
 
-    if (value){
-        const char *s = coverIl2cppString2Char(reinterpret_cast<void *>(value));
-        if (s){
-            LOGE("praseText %s", s);
-            if (strcmp(s, "MUSKETS OF AMERICA")==0){
-                value = il2cpp_string_new("");
-            }
-            Text_set_text(obj, value);
+
+string getCString(void* str){
+    string result;
+    int length = String_get_Length(str);
+    for (int x = 0; x<length; x++){
+        result += String_get_Chars(str, x);
+    }
+    return result;
+}
+
+bool startsWith(const std::string& str, const std::string prefix) {
+    return (str.rfind(prefix, 0) == 0);
+}
+
+
+string is_in_replace_map(std::string s){
+    string result;
+    for (auto it = replace_map.begin(); it != replace_map.end(); it++) {
+//        if (startsWith(s, it->first)){
+//            result = s.replace(s.find(it->first), it->first.length(), it->second);
+//            break;
+//        }
+        if (s.find(it->first) != s.npos){
+            result = s.replace(s.find(it->first), it->first.length(), it->second);
+            break;
         }
     }
+    return result;
+}
 
+
+__attribute__ ((visibility("hidden")))
+void praseText(void* obj, void*value){
+    if (value){
+        string s = getCString(value);
+        if (!s.empty()){
+            LOGE("praseText->%s", s.c_str());
+            if (str_map.count(s) > 0){
+//                LOGE("praseText2 %s", str_map[s].c_str());
+                value = il2cpp_string_new(str_map[s].c_str());
+            }else{
+                string result = is_in_replace_map(s);
+                if (!result.empty()){
+                    value = il2cpp_string_new(result.c_str());
+                } else{
+                    for (auto it = start_str_map.begin(); it != start_str_map.end(); it++) {
+                        if (startsWith(s, it->first)){
+                            value = il2cpp_string_new(it->second.c_str());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Text_set_text(obj, value);
 }
 
 __attribute__ ((visibility("hidden")))
 void AText_OnEnable(void* obj){
-    Text_OnEnable(obj);
     praseText(obj, Text_get_text(obj));
+    Text_OnEnable(obj);
 }
